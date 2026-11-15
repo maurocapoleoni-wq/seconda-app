@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f0f0f">
+  <title>Ascolta il Prog</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Schermata principale: le classifiche incollate da ProgArchives -->
+  <main id="home" class="view">
+    <header class="top">
+      <h1>🎸 Ascolta il Prog</h1>
+      <button id="btn-settings" class="icon-btn" aria-label="Impostazioni">⚙️</button>
+    </header>
+
+    <!-- Come si porta una classifica nell'app -->
+    <section id="guida" class="card guida">
+      <h2>Come avere una classifica</h2>
+      <ol>
+        <li>Tocca <b>Apri ProgArchives</b>: in alto sulla pagina scegli nazione, anni, sottogenere e quanti album (fino a 200), poi tocca il pulsante per cercare.</li>
+        <li>Tieni il dito su una parola della pagina, scegli <b>Seleziona tutto</b> e poi <b>Copia</b>.</li>
+        <li>Torna qui, tocca <b>Incolla la classifica</b>.</li>
+      </ol>
+      <div class="riga-pulsanti">
+        <a id="link-progarchives" class="btn" href="https://www.progarchives.com/top-prog-albums.asp?salbumtypes=1" target="_blank" rel="noopener">1. Apri ProgArchives</a>
+        <button id="btn-incolla" type="button" class="btn primary">2. Incolla la classifica</button>
+      </div>
+    </section>
+
+    <!-- Classifiche salvate -->
+    <section id="sezione-liste" class="lista-area hidden">
+      <div id="chips-liste" class="chips"></div>
+
+      <!-- Filtri sulla classifica scelta -->
+      <div class="filtri">
+        <label>Anni <input id="f-da" type="number" inputmode="numeric" placeholder="dal"> – <input id="f-a" type="number" inputmode="numeric" placeholder="al"></label>
+        <label>Voto da <select id="f-voto">
+          <option value="0">tutti</option><option value="3.5">3,5</option><option value="3.8">3,8</option>
+          <option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
+        </select></label>
+        <label>Mostra <select id="f-quanti">
+          <option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200" selected>200</option>
+        </select></label>
+        <input id="f-testo" type="search" placeholder="Cerca un album o un gruppo">
+      </div>
+      <p id="stato-lista" class="status"></p>
+      <ul id="album" class="album-lista"></ul>
+      <div class="riga-pulsanti fondo">
+        <button id="btn-rinomina" type="button" class="small-btn">✏️ Rinomina</button>
+        <button id="btn-elimina" type="button" class="small-btn">🗑 Elimina questa classifica</button>
+      </div>
+    </section>
+    <p class="quota"></p>
+  </main>
+
+  <!-- Incolla la classifica -->
+  <main id="incolla" class="view hidden">
+    <header class="top">
+      <button class="icon-btn indietro" aria-label="Indietro">←</button>
+      <h2>Incolla la classifica</h2>
+    </header>
+    <div class="corpo">
+      <button id="btn-appunti" type="button" class="btn primary">📋 Incolla quello che hai copiato</button>
+      <p class="hint">Se il pulsante non funziona: tieni il dito nel riquadro qui sotto e scegli <b>Incolla</b>.</p>
+      <textarea id="testo-incollato" rows="8" placeholder="Qui va il testo della pagina di ProgArchives"></textarea>
+      <label class="hint">Nome della classifica (es. Italia 1970–1990)</label>
+      <input id="nome-lista" type="text" placeholder="Classifica">
+      <button id="btn-leggi" type="button" class="btn primary">Leggi la classifica</button>
+      <p id="stato-incolla" class="status"></p>
+    </div>
+  </main>
+
+  <!-- Un album: la sua scaletta -->
+  <main id="vista-album" class="view hidden">
+    <header class="top">
+      <button class="icon-btn indietro" aria-label="Indietro">←</button>
+      <h2 id="album-titolo" class="taglia"></h2>
+    </header>
+    <div class="corpo">
+      <p id="album-info" class="album-info"></p>
+      <div class="riga-pulsanti">
+        <button id="btn-ascolta-tutto" type="button" class="btn primary" disabled>▶ Ascolta dall'inizio</button>
+        <button id="btn-album-intero" type="button" class="btn">🔍 Album intero su YouTube</button>
+      </div>
+      <p id="stato-album" class="status"></p>
+      <ol id="brani" class="brani"></ol>
+      <p id="fonte-brani" class="hint"></p>
+    </div>
+  </main>
+
+  <!-- Player YouTube -->
+  <main id="player" class="view hidden">
+    <header class="top">
+      <button class="icon-btn indietro" aria-label="Indietro">←</button>
+      <h2 id="player-titolo" class="taglia"></h2>
+    </header>
+    <div id="frame-wrap" class="frame-wrap">
+      <iframe id="yt-frame" title="Video YouTube" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <div class="corpo">
+      <p id="player-brano" class="player-brano"></p>
+      <div class="riga-pulsanti">
+        <button id="btn-precedente" type="button" class="btn">⏮ Precedente</button>
+        <button id="btn-successivo" type="button" class="btn primary">⏭ Successivo</button>
+      </div>
+      <label class="check-row"><input id="auto-avanti" type="checkbox" checked> Alla fine passa da solo al brano dopo</label>
+      <p class="hint">Non è il video giusto? Scegline un altro:</p>
+      <ul id="altri-video" class="video-lista"></ul>
+      <a id="open-yt" class="btn" href="#" target="_blank" rel="noopener">📺 Apri nell'app YouTube (per la TV)</a>
+      <p class="quota"></p>
+    </div>
+  </main>
+
+  <!-- Impostazioni -->
+  <main id="impostazioni" class="view hidden">
+    <header class="top">
+      <button class="icon-btn indietro" aria-label="Indietro">←</button>
+      <h2>Impostazioni</h2>
+    </header>
+    <div class="corpo">
+      <h3>Chiave di Claude</h3>
+      <p class="hint">Serve per leggere bene la classifica incollata e per i brani che MusicBrainz non conosce. Costa pochissimo: con Haiku, meno di un centesimo per classifica. Se l'hai già messa in Cerca e Guarda, qui la trovi già pronta.</p>
+      <input id="chiave-claude" type="password" autocomplete="off" placeholder="sk-ant-...">
+      <button id="btn-salva-claude" type="button" class="btn">Salva la chiave di Claude</button>
+      <p id="info-claude" class="hint"></p>
+
+      <h3>Chiave di YouTube (facoltativa)</h3>
+      <p class="hint">L'app ha già una chiave. Mettine una tua solo se quella condivisa finisce le ricerche del giorno.</p>
+      <input id="chiave-yt" type="password" autocomplete="off" placeholder="AIza...">
+      <button id="btn-salva-yt" type="button" class="btn">Salva la chiave di YouTube</button>
+
+      <h3>Copia di sicurezza</h3>
+      <p class="hint">Salva le classifiche e le scalette in un file, per ritrovarle su un altro telefono. Le chiavi non vengono copiate.</p>
+      <div class="riga-pulsanti">
+        <button id="btn-esporta" type="button" class="btn">⬆️ Esporta</button>
+        <button id="btn-importa" type="button" class="btn">⬇️ Importa</button>
+      </div>
+      <input id="file-importa" type="file" accept="application/json,.json" class="hidden">
+      <p id="info-backup" class="hint"></p>
+      <p class="hint">Classifiche e voti: <a href="https://www.progarchives.com/" target="_blank" rel="noopener">ProgArchives</a>. Scalette dei brani: <a href="https://musicbrainz.org/" target="_blank" rel="noopener">MusicBrainz</a>.</p>
+    </div>
+  </main>
+
+  <script src="claude.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
