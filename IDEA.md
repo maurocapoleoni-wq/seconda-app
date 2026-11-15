@@ -45,6 +45,11 @@ Mauro: principiante, scrive in italiano, vuole istruzioni passo passo. Usa l'app
 
 ## Pubblicazione
 - Repository GitHub già creato: **maurocapoleoni-wq/seconda-app** (Public, ancora vuoto). Indirizzo futuro: https://maurocapoleoni-wq.github.io/seconda-app/
-- Mauro carica i file a mano: nel repository vuoto usa il link "uploading an existing file", poi Commit changes; infine Settings → Pages → main / root. Dopo ogni modifica dirgli quali file caricare e alzare `CACHE` in `sw.js`.
+- Mauro carica i file a mano. **Nella guida spiegare sempre dove cliccare:**
+  1. In Chrome aprire github.com/maurocapoleoni-wq/seconda-app, con l'account GitHub già entrato.
+  2. Repository vuoto: nel riquadro azzurro "Quick setup", nella frase "Get started by creating a new file or **uploading an existing file**", cliccare le parole blu "uploading an existing file". Repository non vuoto: pulsante **Add file** (accanto al pulsante verde **Code**) → **Upload files**.
+  3. Trascinare file e cartelle nel riquadro grande, poi **Commit changes** in fondo.
+  4. **Settings** (in alto) → **Pages** (a sinistra) → Branch **main** e **/ (root)** → **Save**. Dopo qualche minuto l'app è online.
+  5. Dopo ogni modifica: dire quali file ricaricare e alzare `CACHE` in `sw.js`.
 - **Attenzione:** le app su `maurocapoleoni-wq.github.io` condividono il localStorage. Usare **nomi di chiavi diversi** da Cerca e Guarda (es. prefisso `prog_`).
 - Serve un QR code nuovo con l'indirizzo della seconda app.

@@ -77,7 +77,8 @@ function mostraHome() {
 }
 
 // ---------- Filtri ----------
-const filtri = leggi('prog_filtri', { da: '', a: '', voto: '0', quanti: '200', testo: '' });
+const filtri = leggi('prog_filtri', { da: '', a: '', voto: '0', quanti: '250', testo: '' });
+if (!['25', '50', '100', '250'].includes(filtri.quanti)) filtri.quanti = '250';
 $('f-da').value = filtri.da;
 $('f-a').value = filtri.a;
 $('f-voto').value = filtri.voto;
@@ -103,7 +104,7 @@ function mostraAlbum() {
   const scelti = lista.album.filter((x) => (!x.anno || (x.anno >= da && x.anno <= a))
     && (!voto || (x.voto || 0) >= voto)
     && (!cerca || minuscolo(x.titolo + ' ' + x.artista).includes(cerca)));
-  const mostrati = scelti.slice(0, Number(filtri.quanti) || 200);
+  const mostrati = scelti.slice(0, Number(filtri.quanti) || 250);
   $('stato-lista').textContent = scelti.length === lista.album.length
     ? `${lista.album.length} album in questa classifica`
     : `${scelti.length} album su ${lista.album.length} con questi filtri`;
@@ -156,10 +157,67 @@ $('btn-rinomina').addEventListener('click', () => {
   mostraHome();
 });
 
+// ---------- Link di ProgArchives con i filtri ----------
+// Il modulo dei filtri di ProgArchives sul telefono non funziona: l'app costruisce lo stesso indirizzo.
+// Esempio (Germania, 2000–2020, 100 album):
+//   top-prog-albums.asp?ssubgenres=&syears=2020&…&syears=2000&salbumtypes=1&scountries=77&…&smaxresults=100#list
+// Numeri delle nazioni come li usa ProgArchives (aggiungere qui quelli che mancano)
+const NAZIONI_PA = [
+  ['', 'Tutte'],
+  ['71', 'Francia'],
+  ['77', 'Germania'],
+  ['99', 'Italia'],
+  ['206', 'Inghilterra (UK)'],
+  ['197', 'Stati Uniti'],
+];
+
+const sceltaPA = leggi('prog_filtri_pa', { nazione: '77', da: '', a: '', quanti: '100', voto: '0' });
+for (const [num, nome] of NAZIONI_PA) $('pa-nazione').append(new Option(nome, num));
+$('pa-nazione').value = NAZIONI_PA.some(([n]) => n === sceltaPA.nazione) ? sceltaPA.nazione : '';
+$('pa-da').value = sceltaPA.da;
+$('pa-a').value = sceltaPA.a;
+$('pa-quanti').value = sceltaPA.quanti;
+$('pa-voto').value = sceltaPA.voto || '0';
+
+function linkProgArchives() {
+  const p = new URLSearchParams();
+  p.append('ssubgenres', '');
+  const da = Number($('pa-da').value) || 0;
+  const a = Number($('pa-a').value) || 0;
+  if (da || a) {
+    const fine = a || new Date().getFullYear();
+    for (let anno = fine; anno >= (da || fine); anno--) p.append('syears', anno);
+  } else {
+    p.append('syears', '');
+  }
+  p.append('salbumtypes', '1');
+  p.append('scountries', $('pa-nazione').value);
+  p.append('sminratings', '0');
+  p.append('smaxratings', '0');
+  p.append('sminavgratings', $('pa-voto').value); // voto medio minimo (0 = nessun limite)
+  p.append('smaxresults', $('pa-quanti').value); // ProgArchives arriva al massimo a 250
+  return 'https://www.progarchives.com/top-prog-albums.asp?' + p + '#list';
+}
+
+// Nome proposto per la classifica, es. "Germania 2000–2020"
+function nomeDaFiltri() {
+  const nazione = $('pa-nazione').selectedOptions[0]?.text || '';
+  const da = $('pa-da').value, a = $('pa-a').value;
+  const anni = da && a ? `${da}–${a}` : da ? `dal ${da}` : a ? `fino al ${a}` : '';
+  return [nazione === 'Tutte' ? 'Tutte le nazioni' : nazione, anni].filter(Boolean).join(' ');
+}
+
+function aggiornaLinkPA() {
+  $('link-progarchives').href = linkProgArchives();
+  scrivi('prog_filtri_pa', { nazione: $('pa-nazione').value, da: $('pa-da').value, a: $('pa-a').value, quanti: $('pa-quanti').value, voto: $('pa-voto').value });
+}
+['pa-nazione', 'pa-da', 'pa-a', 'pa-quanti', 'pa-voto'].forEach((id) => $(id).addEventListener('input', aggiornaLinkPA));
+aggiornaLinkPA();
+
 // ---------- Incolla la classifica ----------
 function apriIncolla() {
   $('testo-incollato').value = '';
-  $('nome-lista').value = '';
+  $('nome-lista').value = nomeDaFiltri();
   $('stato-incolla').textContent = leggiChiaveClaude() ? ''
     : 'Senza la chiave di Claude l\'app prova a leggere la classifica da sola: se non ci riesce, aggiungi la chiave in ⚙️ Impostazioni.';
   mostra('incolla');
@@ -184,9 +242,20 @@ const SOTTOGENERI = ['Canterbury Scene', 'Crossover Prog', 'Eclectic Prog', 'Exp
   'Symphonic Prog', 'Tech/Extreme Prog Metal', 'Zeuhl', 'Proto-Prog', 'Prog Related', 'Various Genres'];
 const eSottogenere = (s) => SOTTOGENERI.some((g) => minuscolo(g) === minuscolo(s));
 
+// Ogni album, nel testo copiato da ProgArchives, è fatto così (una cosa per riga):
+//   2 · Precambrian · The Ocean · Experimental/Post Metal · Studio, 2007 · 4.25 | 129 ratings · QWR = 4.1517
+// A volte titolo e gruppo arrivano come link: [Precambrian](https://www.progarchives.com/album.asp?id=19045)
 function leggiClassificaDaSolo(testo) {
-  const righe = testo.split(/\r?\n/).flatMap((r) => r.split('\t')).map((r) => r.trim()).filter(Boolean);
+  const idAlbum = {}; // titolo → numero dell'album su ProgArchives (per il link alla sua pagina)
+  const righe = testo.split(/\r?\n/).flatMap((r) => r.split('\t'))
+    .map((r) => r.trim().replace(/\[([^\]]*)\]\(([^)\s]*)\)/g, (_, nome, url) => {
+      const id = url.match(/album\.asp\?id=(\d+)/);
+      if (id) idAlbum[nome.trim()] = id[1];
+      return nome;
+    }).trim())
+    .filter((r) => r && !/^QWR\s*=/i.test(r));
   const reVoto = /^(\d[.,]\d{1,2})\s*\|?\s*(?:([\d.,]+)\s*ratings?)?$/i;
+  const reAnno = /^(?:[A-Za-z][\w .'/-]*,\s*)?((?:19|20)\d{2})$/; // "2007" oppure "Studio, 2007"
   const album = [];
   let inizio = 0;
   righe.forEach((r, i) => {
@@ -198,18 +267,21 @@ function leggiClassificaDaSolo(testo) {
     if (dopo) m[2] = dopo[1];
     const blocco = righe.slice(Math.max(inizio, i - 7), i);
     inizio = i + (dopo ? 2 : 1);
-    const anno = blocco.find((x) => /^(19|20)\d{2}$/.test(x));
-    const genere = blocco.find(eSottogenere);
+    const rigaAnno = blocco.find((x) => reAnno.test(x));
+    let genere = blocco.find(eSottogenere);
     const pos = blocco.find((x) => /^\d{1,3}$/.test(x));
-    const resto = blocco.filter((x) => x !== anno && x !== genere && x !== pos && !/^\d+$/.test(x));
+    const resto = blocco.filter((x) => x !== rigaAnno && x !== genere && x !== pos && !/^\d+$/.test(x));
+    // sottogenere che l'app non conosce: è la riga dopo il gruppo
+    if (!genere && resto.length >= 3) genere = resto.pop();
     if (resto.length < 2) return;
     const [titolo, artista] = resto.slice(-2);
     album.push({
       pos: Number(pos) || album.length + 1,
       titolo, artista, genere: genere || '',
-      anno: anno ? Number(anno) : null,
+      anno: rigaAnno ? Number(rigaAnno.match(reAnno)[1]) : null,
       voto: Number(m[1].replace(',', '.')),
       voti: m[2] ? Number(m[2].replace(/[.,]/g, '')) : null,
+      ...(idAlbum[titolo] && { pa: idAlbum[titolo] }),
     });
   });
   return album;
@@ -223,11 +295,11 @@ $('btn-leggi').addEventListener('click', async () => {
   btn.disabled = true;
   let album = [];
   try {
-    if (leggiChiaveClaude()) {
+    // prima prova da sola (gratis e immediato); Claude solo se il testo ha una forma diversa dal solito
+    album = leggiClassificaDaSolo(testo);
+    if (album.length < 3 && leggiChiaveClaude()) {
       stato.textContent = 'Claude sta leggendo la classifica… (può volerci fino a un minuto)';
       album = await leggiClassificaConClaude(testo);
-    } else {
-      album = leggiClassificaDaSolo(testo);
     }
   } catch (err) {
     stato.textContent = err instanceof TypeError ? 'Nessuna connessione: controlla internet e riprova.' : err.message;
@@ -268,6 +340,8 @@ async function apriAlbum(a) {
   $('brani').innerHTML = '';
   $('fonte-brani').textContent = '';
   $('btn-ascolta-tutto').disabled = true;
+  $('link-album-pa').classList.toggle('hidden', !a.pa);
+  if (a.pa) $('link-album-pa').href = 'https://www.progarchives.com/album.asp?id=' + encodeURIComponent(a.pa);
   mostra('vista-album');
   const salvata = leggi('prog_scalette', {})[chiaveAlbum(a)];
   if (salvata) { mostraBrani(salvata); return; }
@@ -315,17 +389,25 @@ function mostraBrani(s) {
 const aspetta = (ms) => new Promise((r) => setTimeout(r, ms));
 const virgolette = (s) => '"' + s.replace(/["\\]/g, ' ') + '"';
 
+// Se MusicBrainz risponde "troppe richieste" (503), aspetta e riprova fino a 3 volte
+async function chiediMusicBrainz(percorso) {
+  for (let tentativo = 0; ; tentativo++) {
+    const r = await fetch('https://musicbrainz.org/ws/2/' + percorso);
+    if (r.ok) return r.json();
+    if (r.status !== 503 || tentativo >= 3) throw new Error('MusicBrainz ' + r.status);
+    await aspetta(1500 * (tentativo + 1));
+  }
+}
+
 async function scalettaDaMusicBrainz(a) {
   const q = `release:${virgolette(a.titolo)} AND artist:${virgolette(a.artista)}`;
-  const r = await fetch('https://musicbrainz.org/ws/2/release?fmt=json&limit=25&query=' + encodeURIComponent(q));
-  if (!r.ok) throw new Error('MusicBrainz ' + r.status);
-  const edizioni = ((await r.json()).releases || [])
+  const edizioni = ((await chiediMusicBrainz('release?fmt=json&limit=25&query=' + encodeURIComponent(q))).releases || [])
     .filter((x) => x.score >= 90 && x['track-count'] > 0)
     .sort((x, y) => (x.status === 'Official' ? 0 : 1) - (y.status === 'Official' ? 0 : 1)
       || (x.date || '9999').localeCompare(y.date || '9999'));
   if (!edizioni.length) return [];
   await aspetta(1100);
-  const d = await (await fetch(`https://musicbrainz.org/ws/2/release/${edizioni[0].id}?fmt=json&inc=recordings`)).json();
+  const d = await chiediMusicBrainz(`release/${edizioni[0].id}?fmt=json&inc=recordings`);
   return (d.media || []).flatMap((m) => m.tracks || []).map((t) => t.title).filter(Boolean);
 }
 

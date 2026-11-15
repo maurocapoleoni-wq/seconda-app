@@ -51,6 +51,10 @@ body {
 
 .card { margin: 8px 16px 16px; padding: 14px 16px; border-radius: 14px; background: var(--card); }
 .guida h2 { margin: 0 0 8px; font-size: 1.05rem; }
+.filtri-pa { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 12px; color: var(--muted); font-size: 0.9rem; }
+.filtri-pa label { display: flex; align-items: center; gap: 6px; }
+.filtri-pa input, .filtri-pa select { padding: 8px 10px; border-radius: 8px; border: 1px solid #333; background: var(--bg); color: var(--text); font-size: 1rem; }
+.filtri-pa input[type="number"] { width: 5.2em; }
 .guida ol { margin: 0 0 14px; padding-left: 20px; line-height: 1.45; color: #ddd; }
 .guida li { margin-bottom: 6px; }
 

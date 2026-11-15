@@ -21,8 +21,19 @@
     <!-- Come si porta una classifica nell'app -->
     <section id="guida" class="card guida">
       <h2>Come avere una classifica</h2>
+      <!-- Filtri: l'app prepara il link di ProgArchives già filtrato -->
+      <div class="filtri-pa">
+        <label>Nazione <select id="pa-nazione"></select></label>
+        <label>Anni <input id="pa-da" type="number" inputmode="numeric" placeholder="dal"> – <input id="pa-a" type="number" inputmode="numeric" placeholder="al"></label>
+        <label>Quanti album <select id="pa-quanti">
+          <option value="25">25</option><option value="50">50</option><option value="100" selected>100</option><option value="200">200</option><option value="250">250</option>
+        </select></label>
+        <label>Voto minimo <select id="pa-voto">
+          <option value="0">nessuno</option><option value="3.5">3,5</option><option value="3.8">3,8</option><option value="4">4,0</option><option value="4.2">4,2</option>
+        </select></label>
+      </div>
       <ol>
-        <li>Tocca <b>Apri ProgArchives</b>: in alto sulla pagina scegli nazione, anni, sottogenere e quanti album (fino a 200), poi tocca il pulsante per cercare.</li>
+        <li>Scegli nazione, anni e quanti album, poi tocca <b>Apri ProgArchives</b>: si apre la classifica già filtrata.</li>
         <li>Tieni il dito su una parola della pagina, scegli <b>Seleziona tutto</b> e poi <b>Copia</b>.</li>
         <li>Torna qui, tocca <b>Incolla la classifica</b>.</li>
       </ol>
@@ -44,7 +55,7 @@
           <option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
         </select></label>
         <label>Mostra <select id="f-quanti">
-          <option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200" selected>200</option>
+          <option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="250" selected>tutti</option>
         </select></label>
         <input id="f-testo" type="search" placeholder="Cerca un album o un gruppo">
       </div>
@@ -90,6 +101,7 @@
       <p id="stato-album" class="status"></p>
       <ol id="brani" class="brani"></ol>
       <p id="fonte-brani" class="hint"></p>
+      <a id="link-album-pa" class="btn hidden" href="#" target="_blank" rel="noopener">Pagina dell'album su ProgArchives</a>
     </div>
   </main>
 
