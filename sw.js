@@ -1,6 +1,6 @@
 // Service worker minimo: mette in cache i file dell'app così si apre subito.
 // Dopo ogni modifica ai file, alzare il numero qui sotto.
-const CACHE = 'prog-v15';
+const CACHE = 'prog-v16';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'claude.js', 'mondo.js', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {

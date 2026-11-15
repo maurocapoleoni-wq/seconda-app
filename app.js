@@ -26,6 +26,7 @@ function scrivi(k, v) {
 const viste = ['home', 'classifica', 'incolla', 'vista-album', 'player', 'impostazioni'];
 function mostra(nome, nuova = true) {
   viste.forEach((v) => $(v).classList.toggle('hidden', v !== nome));
+  $('avviso').classList.add('hidden'); // cambiando pagina l'avviso sparisce
   window.scrollTo(0, 0);
   if (nuova && nome !== 'home') history.pushState({ v: nome }, '');
 }
@@ -1006,7 +1007,7 @@ window.addEventListener('storage', (e) => {
 });
 
 // ---------- Classifica copiata a mano: l'app se ne accorge quando torni ----------
-// Controlla gli appunti solo se poco prima (30 minuti) hai toccato "Sintonizza".
+// Controlla gli appunti una sola volta, al primo ritorno dopo "Sintonizza" (entro 30 minuti).
 for (const id of ['link-progarchives', 'link-progarchives-2']) $(id).addEventListener('click', () => scrivi('prog_aperto_pa', Date.now()));
 let controlloInCorso = false;
 async function controllaAppunti() {
@@ -1017,7 +1018,11 @@ async function controllaAppunti() {
   controlloInCorso = true;
   try {
     let testo = '';
+    // se il telefono non lascia leggere (es. l'app non è ancora in primo piano) riprova al prossimo evento
     try { testo = await navigator.clipboard.readText(); } catch { return; }
+    // letto una volta: basta così fino al prossimo "Sintonizza"
+    // (Android mostra "Chrome ha incollato dagli appunti" ogni volta che l'app li legge)
+    scrivi('prog_aperto_pa', 0);
     if (testo.length < 200 || leggi('prog_ultimi_appunti', '') === firmaTesto(testo)) return;
     const album = leggiClassificaDaSolo(testo);
     if (album.length < 3) return;
