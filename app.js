@@ -377,6 +377,91 @@ $('pa-nazione').addEventListener('input', () => globo.giraVerso($('pa-nazione').
 aggiornaLinkPA();
 if ($('pa-nazione').value) globo.giraVerso($('pa-nazione').value);
 
+// ---------- Il microfono: dici una nazione e la radio la accende ----------
+// Usa il riconoscimento della voce del browser (funziona in Chrome; Brave di solito lo blocca).
+const Riconoscimento = window.SpeechRecognition || window.webkitSpeechRecognition;
+// Altri modi di dire le nazioni (oltre ai nomi dell'elenco)
+const SINONIMI = {
+  'tutte': '', 'tutte le nazioni': '', 'tutti': '', 'tutto il mondo': '', 'mondo': '',
+  'regno unito': '206', 'gran bretagna': '206', 'inghilterra': '206', 'uk': '206', 'scozia': '206', 'galles': '206', 'inglese': '206', 'inglesi': '206',
+  'stati uniti': '197', 'stati uniti d america': '197', 'america': '197', 'usa': '197', 'americano': '197', 'americani': '197',
+  'paesi bassi': '145', 'olandese': '145', 'olandesi': '145', 'cechia': '55', 'repubblica ceca': '55', 'cecoslovacchia': '55',
+  'corea': '106', 'emirati': '195', 'italiano': '99', 'italiani': '99', 'tedesco': '77', 'tedeschi': '77',
+  'francese': '71', 'francesi': '71', 'svedese': '178', 'svedesi': '178', 'giapponese': '101', 'giapponesi': '101',
+  'spagnolo': '207', 'spagnoli': '207', 'norvegese': '153', 'norvegesi': '153', 'polacco': '162', 'polacchi': '162',
+  'russo': '168', 'russi': '168', 'brasiliano': '108', 'brasiliani': '108', 'argentino': '1', 'argentini': '1',
+  'canadese': '37', 'canadesi': '37', 'finlandese': '70', 'finlandesi': '70', 'danese': '56', 'danesi': '56',
+  'ungherese': '91', 'ungheresi': '91', 'greco': '80', 'greci': '80', 'belga': '22', 'belgi': '22',
+  'austriaco': '14', 'austriaci': '14', 'messicano': '132', 'messicani': '132', 'australiano': '13', 'australiani': '13',
+  'svizzero': '179', 'svizzeri': '179', 'portoghese': '163', 'portoghesi': '163', 'islandese': '92', 'islandesi': '92',
+  'jugoslavo': '203', 'yugoslavia': '203', 'multinazionale': '210', 'peru': '160',
+};
+const pulisci = (t) => ' ' + minuscolo(t).replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
+const PAROLE_NAZIONI = [
+  ...NAZIONI_PA.filter(([n]) => n).map(([n, nome]) => [pulisci(nome.replace(/\(.*\)/, '')), n]),
+  ...Object.entries(SINONIMI).map(([parola, n]) => [pulisci(parola), n]),
+].sort((x, y) => y[0].length - x[0].length); // prima le più lunghe ("stati uniti" prima di "uniti")
+
+// Cerca una nazione dentro la frase detta. Restituisce il numero ('' = tutte) o null se non la trova.
+function nazioneDaFrase(frase) {
+  const f = pulisci(frase);
+  const trovata = PAROLE_NAZIONI.find(([parola]) => f.includes(parola));
+  return trovata ? trovata[1] : null;
+}
+
+let ascolto = null;
+function smettiDiAscoltare() {
+  $('btn-microfono').classList.remove('ascolta');
+  document.querySelector('.radio-led').classList.remove('ascolta');
+  ascolto = null;
+}
+$('btn-microfono').addEventListener('click', () => {
+  const nota = $('nota-globo');
+  if (!Riconoscimento) {
+    nota.textContent = 'Questo browser non sa ascoltare la voce. Apri l\'app con Chrome.';
+    return;
+  }
+  if (ascolto) { ascolto.stop(); return; } // secondo tocco: smette di ascoltare
+  ascolto = new Riconoscimento();
+  ascolto.lang = 'it-IT';
+  ascolto.maxAlternatives = 5;
+  ascolto.interimResults = false;
+  $('btn-microfono').classList.add('ascolta');
+  document.querySelector('.radio-led').classList.add('ascolta');
+  nota.textContent = '🎤 Ti ascolto… dimmi una nazione';
+  let capito = false;
+  ascolto.onresult = (e) => {
+    const frasi = [...e.results[0]].map((r) => r.transcript);
+    for (const frase of frasi) {
+      const n = nazioneDaFrase(frase);
+      if (n === null) continue;
+      capito = true;
+      $('pa-nazione').value = n;
+      aggiornaLinkPA();
+      if (n) globo.giraVerso(n);
+      nota.textContent = `Ho capito «${frase}»: ${n ? nomeNazione(n) : 'tutte le nazioni'} 📻`;
+      return;
+    }
+    capito = true;
+    nota.textContent = `Ho sentito «${frasi[0]}», ma non è una nazione di ProgArchives. Riprova.`;
+  };
+  ascolto.onerror = (e) => {
+    capito = true;
+    nota.textContent = {
+      'not-allowed': 'Serve il permesso del microfono: quando il telefono lo chiede, tocca Consenti.',
+      'service-not-allowed': 'Questo browser non lascia usare la voce. Apri l\'app con Chrome.',
+      'no-speech': 'Non ho sentito niente. Tocca 🎤 e riprova.',
+      'network': 'Per capire la voce serve internet. In Brave la voce di solito non funziona: apri l\'app con Chrome.',
+      'aborted': 'Ho smesso di ascoltare.',
+    }[e.error] || 'Non sono riuscito ad ascoltare. Tocca 🎤 e riprova.';
+  };
+  ascolto.onend = () => {
+    if (!capito) nota.textContent = 'Non ho sentito niente. Tocca 🎤 e riprova.';
+    smettiDiAscoltare();
+  };
+  try { ascolto.start(); } catch { smettiDiAscoltare(); }
+});
+
 // ---------- Incolla la classifica ----------
 function apriIncolla() {
   $('testo-incollato').value = '';
