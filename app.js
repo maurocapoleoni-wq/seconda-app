@@ -1021,10 +1021,9 @@ async function controllaAppunti() {
     if (testo.length < 200 || leggi('prog_ultimi_appunti', '') === firmaTesto(testo)) return;
     const album = leggiClassificaDaSolo(testo);
     if (album.length < 3) return;
-    scrivi('prog_ultimi_appunti', firmaTesto(testo)); // non chiederlo di nuovo per lo stesso testo
-    const nome = nomeDaFiltri();
-    if (!confirm(`Hai copiato una classifica di ProgArchives con ${album.length} album.\nVuoi aggiungerla come "${nome}"?`)) return;
-    const errore = salvaClassifica(album, nome);
+    scrivi('prog_ultimi_appunti', firmaTesto(testo)); // non aggiungerla di nuovo per lo stesso testo
+    // niente domande: la salva e apre subito la pagina della classifica
+    const errore = salvaClassifica(album, nomeDaFiltri());
     if (errore) { mostraAvviso(errore); return; }
     apriClassifica();
     mostraAvviso(`✅ Classifica aggiunta: ${listaAttiva().album.length} album.`);
