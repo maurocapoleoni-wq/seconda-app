@@ -408,7 +408,7 @@ function nazioneDaFrase(frase) {
 let ascolto = null;
 function smettiDiAscoltare() {
   $('btn-microfono').classList.remove('ascolta');
-  document.querySelector('.radio-led').classList.remove('ascolta');
+  document.querySelector('.radio-led')?.classList.remove('ascolta');
   ascolto = null;
 }
 $('btn-microfono').addEventListener('click', () => {
@@ -423,7 +423,7 @@ $('btn-microfono').addEventListener('click', () => {
   ascolto.maxAlternatives = 5;
   ascolto.interimResults = false;
   $('btn-microfono').classList.add('ascolta');
-  document.querySelector('.radio-led').classList.add('ascolta');
+  document.querySelector('.radio-led')?.classList.add('ascolta');
   nota.textContent = '🎤 Ti ascolto… dimmi una nazione';
   let capito = false;
   ascolto.onresult = (e) => {
@@ -468,7 +468,6 @@ function apriIncolla() {
     : 'Senza la chiave di Claude l\'app prova a leggere la classifica da sola: se non ci riesce, aggiungi la chiave in ⚙️ Impostazioni.';
   mostra('incolla');
 }
-$('btn-incolla').addEventListener('click', apriIncolla);
 $('btn-incolla-2').addEventListener('click', apriIncolla);
 
 $('btn-appunti').addEventListener('click', async () => {
@@ -954,31 +953,8 @@ $('file-importa').addEventListener('change', async (e) => {
   location.reload();
 });
 
-// ---------- Il pulsante «Manda al Prog» (un segnalibro speciale) ----------
-// Gira sulla pagina di ProgArchives che Mauro ha aperto lui: prende il testo della classifica
-// (come "Seleziona tutto → Copia") più i link degli album, e lo porta all'app nell'indirizzo.
-// Va scritto senza commenti dentro e con i punti e virgola: nel segnalibro diventa una riga sola.
-// \x23 è il carattere "#" (scritto così perché dentro un segnalibro "#" darebbe problemi).
-function mandaAlProg(app) {
-  if (!/progarchives\.com$/.test(location.hostname)) { alert('Usa Manda al Prog sulla pagina con la classifica di ProgArchives.'); return; }
-  var link = [].map.call(document.querySelectorAll('a[href*="album.asp?id="]'), function (a) { return '[' + a.textContent.trim() + '](' + a.href + ')'; }).join('\n');
-  location.href = app + '\x23classifica=' + encodeURIComponent(document.body.innerText + '\n' + link);
-}
-function codiceSegnalibro() {
-  const app = new URL('./', location.href).href;
-  return 'javascript:(' + mandaAlProg.toString().replace(/\s*\n\s*/g, ' ') + ')(' + JSON.stringify(app) + ')';
-}
-$('codice-segnalibro').value = codiceSegnalibro();
-$('btn-copia-segnalibro').addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(codiceSegnalibro());
-    $('info-segnalibro').textContent = '✅ Codice copiato. Ora segui i passi qui sopra.';
-  } catch {
-    $('codice-segnalibro').select();
-    $('info-segnalibro').textContent = 'Il telefono non lascia copiare da solo: tieni il dito sul codice qui sopra, scegli Seleziona tutto e poi Copia.';
-  }
-});
-
+// ---------- Classifica mandata dal segnalibro «Manda al Prog» ----------
+// (Il riquadro per preparare il segnalibro è stato tolto; chi l'aveva già preparato può continuare a usarlo.)
 // La classifica arriva dal segnalibro: è nell'indirizzo, dopo "#classifica="
 async function riceviDalSegnalibro() {
   if (!location.hash.startsWith('#classifica=')) return;

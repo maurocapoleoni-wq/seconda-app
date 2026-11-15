@@ -71,3 +71,7 @@ Mauro: principiante, scrive in italiano, vuole istruzioni passo passo. Usa l'app
 - Sotto il mappamondo c'è il tasto "📋 <nazione> ›": apre la seconda pagina con la classifica che corrisponde alle scelte della radio (nazione + anni + voto, `chiave` = `nomeDaFiltri()`).
 - Se non c'è ancora, la pagina spiega come averla (Sintonizza → Copia → torna). Una nuova classifica con le stesse scelte sostituisce la vecchia.
 - "📻 Torna alla radio" (o ←) riporta alla pagina principale. Tolti i tasti Memorie e "Rinomina".
+
+## Prima pagina a tutto schermo — 15 novembre 2026
+- Tolti: titolo "Ascolta il Prog", scritta "Radio ProgArchives", nota sotto Sintonizza, tasto "Incolla" della radio (resta nella pagina Classifica), riquadro «Manda al Prog» (il segnalibro già preparato continua a funzionare).
+- ⚙️ ora è un tasto tondo accanto a Sintonizza. Il mappamondo si adatta all'altezza dello schermo (`max-height: calc(100dvh - 535px)` in style.css) così la radio sta in una pagina.

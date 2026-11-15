@@ -51,11 +51,10 @@ body {
 
 .card { margin: 8px 16px 16px; padding: 14px 16px; border-radius: 14px; background: var(--card); }
 /* ---------- La radio ---------- */
-.radio { margin: 4px 12px 16px; padding: 14px; border-radius: 26px; background: #3b2414; border: 6px solid #2a170b; color: #f3e3c3; }
-.radio-testa { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; letter-spacing: 0.5px; margin: 0 4px 10px; }
-.radio-led { width: 10px; height: 10px; border-radius: 50%; background: #ff5a3c; }
-.radio-vetro { background: #1b120a; border: 2px solid #c9a35a; border-radius: 18px; padding: 10px 10px 8px; text-align: center; }
-#globo { width: 100%; max-width: 300px; height: auto; display: block; margin: 0 auto; touch-action: none; cursor: grab; }
+.radio { margin: 8px 10px; padding: 10px 12px 12px; border-radius: 26px; background: #3b2414; border: 6px solid #2a170b; color: #f3e3c3; }
+.radio-led { position: absolute; top: 10px; left: 12px; width: 10px; height: 10px; border-radius: 50%; background: #ff5a3c; }
+.radio-vetro { position: relative; background: #1b120a; border: 2px solid #c9a35a; border-radius: 18px; padding: 10px 10px 8px; text-align: center; }
+#globo { width: 100%; max-width: 300px; height: auto; max-height: calc(100dvh - 535px); min-height: 160px; display: block; margin: 0 auto; touch-action: none; cursor: grab; }
 #globo .mare { fill: #1f4e6b; }
 #globo .bordo-globo { fill: none; stroke: #c9a35a; stroke-width: 2; }
 #globo .paese { fill: #7fa46a; stroke: #1b120a; stroke-width: 0.5; cursor: pointer; }
@@ -185,3 +184,8 @@ textarea { width: 100%; resize: vertical; font-size: 0.85rem; }
 .guida-vuota ol { margin: 8px 0 14px; padding-left: 20px; line-height: 1.45; color: #ddd; }
 .guida-vuota p { margin: 0; }
 .avviso { margin: 8px 16px; }
+
+/* Tasto tondo delle impostazioni, accanto a Sintonizza */
+.tasto.tondo { flex: 0 0 48px; height: 48px; padding: 0; border-radius: 50%; font-size: 1.3rem; align-self: center; }
+.radio .radio-tasti { margin-top: 10px; }
+.radio .quadrante { margin-top: 10px; }
