@@ -161,15 +161,28 @@ $('btn-rinomina').addEventListener('click', () => {
 // Il modulo dei filtri di ProgArchives sul telefono non funziona: l'app costruisce lo stesso indirizzo.
 // Esempio (Germania, 2000–2020, 100 album):
 //   top-prog-albums.asp?ssubgenres=&syears=2020&…&syears=2000&salbumtypes=1&scountries=77&…&smaxresults=100#list
-// Numeri delle nazioni come li usa ProgArchives (aggiungere qui quelli che mancano)
-const NAZIONI_PA = [
-  ['', 'Tutte'],
-  ['71', 'Francia'],
-  ['77', 'Germania'],
-  ['99', 'Italia'],
-  ['206', 'Inghilterra (UK)'],
-  ['197', 'Stati Uniti'],
-];
+// Numeri delle nazioni come li usa ProgArchives (elenco completo raccolto da Mauro il 15/11/2026).
+// Nel menu vengono messe in ordine alfabetico; "Tutte" resta per prima.
+const NAZIONI_PA = [['', 'Tutte'], ...[
+  ['4', 'Algeria'], ['6', 'Andorra'], ['1', 'Argentina'], ['11', 'Armenia'], ['13', 'Australia'],
+  ['14', 'Austria'], ['18', 'Bahrein'], ['22', 'Belgio'], ['21', 'Bielorussia'], ['27', 'Bolivia'],
+  ['108', 'Brasile'], ['32', 'Bulgaria'], ['37', 'Canada'], ['42', 'Cile'], ['43', 'Cina'],
+  ['46', 'Colombia'], ['50', 'Costa Rica'], ['52', 'Croazia'], ['53', 'Cuba'], ['55', 'Repubblica Ceca'],
+  ['56', 'Danimarca'], ['61', 'Egitto'], ['65', 'Estonia'], ['70', 'Finlandia'], ['71', 'Francia'],
+  ['76', 'Georgia'], ['77', 'Germania'], ['80', 'Grecia'], ['91', 'Ungheria'], ['92', 'Islanda'],
+  ['93', 'India'], ['94', 'Indonesia'], ['95', 'Iran'], ['96', 'Iraq'], ['97', 'Irlanda'],
+  ['98', 'Israele'], ['99', 'Italia'], ['101', 'Giappone'], ['103', 'Kazakistan'], ['106', 'Corea del Sud'],
+  ['109', 'Kuwait'], ['112', 'Lettonia'], ['113', 'Libano'], ['118', 'Lituania'], ['119', 'Lussemburgo'],
+  ['220', 'Macedonia'], ['121', 'Madagascar'], ['123', 'Malesia'], ['126', 'Malta'], ['132', 'Messico'],
+  ['134', 'Moldavia'], ['135', 'Monaco'], ['219', 'Montenegro'], ['210', 'Multinazionale'], ['145', 'Olanda'],
+  ['147', 'Nuova Zelanda'], ['148', 'Nicaragua'], ['153', 'Norvegia'], ['155', 'Pakistan'], ['222', 'Palestina'],
+  ['157', 'Panama'], ['160', 'Perù'], ['161', 'Filippine'], ['162', 'Polonia'], ['163', 'Portogallo'],
+  ['164', 'Porto Rico'], ['167', 'Romania'], ['168', 'Russia'], ['218', 'Serbia'], ['176', 'Singapore'],
+  ['211', 'Slovacchia'], ['212', 'Slovenia'], ['215', 'Sudafrica'], ['207', 'Spagna'], ['178', 'Svezia'],
+  ['179', 'Svizzera'], ['180', 'Siria'], ['181', 'Taiwan'], ['184', 'Tailandia'], ['189', 'Tunisia'],
+  ['190', 'Turchia'], ['194', 'Ucraina'], ['195', 'Emirati Arabi'], ['206', 'Inghilterra (UK)'], ['197', 'Stati Uniti'],
+  ['198', 'Uruguay'], ['199', 'Uzbekistan'], ['140', 'Varie'], ['200', 'Venezuela'], ['203', 'Jugoslavia'],
+].sort((x, y) => x[1].localeCompare(y[1], 'it'))];
 
 const sceltaPA = leggi('prog_filtri_pa', { nazione: '77', da: '', a: '', quanti: '100', voto: '0' });
 for (const [num, nome] of NAZIONI_PA) $('pa-nazione').append(new Option(nome, num));
