@@ -50,7 +50,11 @@ body {
 .small-btn { padding: 8px 14px; border-radius: 18px; border: none; background: #333; color: var(--text); font-size: 0.9rem; }
 
 .card { margin: 8px 16px 16px; padding: 14px 16px; border-radius: 14px; background: var(--card); }
-.guida h2 { margin: 0 0 8px; font-size: 1.05rem; }
+.guida summary { cursor: pointer; padding: 2px 0; font-size: 1.05rem; font-weight: 700; list-style: none; }
+.guida summary::-webkit-details-marker { display: none; }
+.guida summary::after { content: " ▾"; color: var(--viola); }
+.guida details[open] summary::after { content: " ▴"; }
+.guida details[open] summary { margin-bottom: 12px; }
 .filtri-pa { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 12px; color: var(--muted); font-size: 0.9rem; }
 .filtri-pa label { display: flex; align-items: center; gap: 6px; }
 .filtri-pa input, .filtri-pa select { padding: 8px 10px; border-radius: 8px; border: 1px solid #333; background: var(--bg); color: var(--text); font-size: 1rem; }

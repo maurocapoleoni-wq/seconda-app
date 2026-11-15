@@ -53,9 +53,11 @@ function mostraHome() {
   const liste = leggiListe();
   const attiva = listaAttiva();
   $('sezione-liste').classList.toggle('hidden', !attiva);
-  // la guida resta in cima finché non c'è una classifica, poi scende in fondo come promemoria
-  $('home').append($('guida'), document.querySelector('#home > .quota'));
-  if (!attiva) $('home').insertBefore($('guida'), $('sezione-liste'));
+  // i filtri per una nuova classifica stanno sempre in cima: aperti se non c'è ancora nessuna classifica,
+  // chiusi (basta toccare il titolo) quando ce n'è già una
+  if (!attiva) $('guida-apri').open = true;
+  else if (!mostraHome.giaAperta) $('guida-apri').open = false;
+  mostraHome.giaAperta = true;
 
   const box = $('chips-liste');
   box.innerHTML = '';
@@ -71,7 +73,10 @@ function mostraHome() {
   nuova.type = 'button';
   nuova.className = 'chip nuova';
   nuova.textContent = '+ Nuova classifica';
-  nuova.addEventListener('click', apriIncolla);
+  nuova.addEventListener('click', () => {
+    $('guida-apri').open = true;
+    $('guida').scrollIntoView({ behavior: 'smooth' });
+  });
   box.append(nuova);
   mostraAlbum();
 }

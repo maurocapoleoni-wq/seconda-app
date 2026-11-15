@@ -20,7 +20,8 @@
 
     <!-- Come si porta una classifica nell'app -->
     <section id="guida" class="card guida">
-      <h2>Come avere una classifica</h2>
+      <details id="guida-apri" open>
+      <summary>🔎 Nuova classifica da ProgArchives</summary>
       <!-- Filtri: l'app prepara il link di ProgArchives già filtrato -->
       <div class="filtri-pa">
         <label>Nazione <select id="pa-nazione"></select></label>
@@ -31,7 +32,11 @@
         <label>Voto minimo <select id="pa-voto">
           <option value="0">nessuno</option><option value="3.5">3,5</option><option value="3.8">3,8</option><option value="4">4,0</option><option value="4.2">4,2</option>
         </select></label>
+        <label>Voto massimo <select id="pa-voto-max">
+          <option value="0">nessuno</option><option value="3.5">3,5</option><option value="3.8">3,8</option><option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
+        </select></label>
       </div>
+      <p id="nota-voto-max" class="hint hidden">ProgArchives non ha il voto massimo: l'app toglie gli album più votati dopo che hai incollato la classifica. Scegli 250 album, così te ne restano di più.</p>
       <ol>
         <li>Scegli nazione, anni e quanti album, poi tocca <b>Apri ProgArchives</b>: si apre la classifica già filtrata.</li>
         <li>Tieni il dito su una parola della pagina, scegli <b>Seleziona tutto</b> e poi <b>Copia</b>.</li>
@@ -41,6 +46,7 @@
         <a id="link-progarchives" class="btn" href="https://www.progarchives.com/top-prog-albums.asp?salbumtypes=1" target="_blank" rel="noopener">1. Apri ProgArchives</a>
         <button id="btn-incolla" type="button" class="btn primary">2. Incolla la classifica</button>
       </div>
+      </details>
     </section>
 
     <!-- Classifiche salvate -->
@@ -51,6 +57,10 @@
       <div class="filtri">
         <label>Anni <input id="f-da" type="number" inputmode="numeric" placeholder="dal"> – <input id="f-a" type="number" inputmode="numeric" placeholder="al"></label>
         <label>Voto da <select id="f-voto">
+          <option value="0">tutti</option><option value="3.5">3,5</option><option value="3.8">3,8</option>
+          <option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
+        </select></label>
+        <label>a <select id="f-voto-max">
           <option value="0">tutti</option><option value="3.5">3,5</option><option value="3.8">3,8</option>
           <option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
         </select></label>
