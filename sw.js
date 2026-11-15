@@ -1,10 +1,12 @@
 // Service worker minimo: mette in cache i file dell'app così si apre subito.
 // Dopo ogni modifica ai file, alzare il numero qui sotto.
-const CACHE = 'prog-v9';
+const CACHE = 'prog-v10';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'claude.js', 'mondo.js', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: 'reload' })))));
+  // un file per volta: se ne manca uno (es. un'icona non caricata) gli altri vengono salvati lo stesso
+  e.waitUntil(caches.open(CACHE).then((c) => Promise.all(FILES.map((f) =>
+    c.add(new Request(f, { cache: 'reload' })).catch(() => {})))));
   self.skipWaiting();
 });
 
