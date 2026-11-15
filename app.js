@@ -23,7 +23,7 @@ function scrivi(k, v) {
 }
 
 // ---------- Schermate ----------
-const viste = ['home', 'incolla', 'vista-album', 'player', 'impostazioni'];
+const viste = ['home', 'classifica', 'incolla', 'vista-album', 'player', 'impostazioni'];
 function mostra(nome, nuova = true) {
   viste.forEach((v) => $(v).classList.toggle('hidden', v !== nome));
   window.scrollTo(0, 0);
@@ -35,38 +35,39 @@ document.querySelectorAll('.indietro').forEach((b) => b.addEventListener('click'
 window.addEventListener('popstate', (e) => {
   const verso = e.state?.v || 'home';
   if (!$('player').classList.contains('hidden') && verso !== 'player') fermaVideo();
+  if (verso === 'classifica') mostraClassifica();
   mostra(verso, false);
 });
 
 // ---------- Classifiche salvate ----------
-// prog_liste: [{ id, nome, creata, album: [{ pos, titolo, artista, genere, anno, voto, voti }] }]
+// prog_liste: [{ id, nome, chiave, creata, album: [{ pos, titolo, artista, genere, anno, voto, voti }] }]
+// "chiave" = le scelte della radio (es. "Germania 1970–1980"): ogni scelta ha al massimo una classifica.
 const leggiListe = () => leggi('prog_liste', []);
 const scriviListe = (l) => scrivi('prog_liste', l);
-let idListaAttiva = leggi('prog_lista_attiva', null);
+let idListaAttiva = null;
 
 function listaAttiva() {
-  const liste = leggiListe();
-  return liste.find((l) => l.id === idListaAttiva) || liste[0] || null;
+  return leggiListe().find((l) => l.id === idListaAttiva) || null;
 }
 
-function mostraHome() {
-  const liste = leggiListe();
-  const attiva = listaAttiva();
-  $('sezione-liste').classList.toggle('hidden', !attiva);
-  $('memorie').classList.toggle('hidden', !liste.length);
-  $('titolo-lista').textContent = attiva ? '📻 ' + attiva.nome : '';
+// La classifica che corrisponde a quello che è scelto sulla radio (se c'è già)
+function listaPerFiltri() {
+  const chiave = nomeDaFiltri();
+  return leggiListe().filter((l) => (l.chiave || l.nome) === chiave).pop() || null;
+}
 
-  const box = $('chips-liste');
-  box.innerHTML = '';
-  for (const l of liste) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'memoria' + (l.id === attiva?.id ? ' attiva' : '');
-    b.textContent = `${l.nome} (${l.album.length})`;
-    b.addEventListener('click', () => { idListaAttiva = l.id; scrivi('prog_lista_attiva', l.id); mostraHome(); });
-    box.append(b);
-  }
+// Seconda pagina: mostra la classifica della radio, oppure come averla
+function mostraClassifica() {
+  const lista = listaPerFiltri();
+  idListaAttiva = lista?.id || null;
+  $('titolo-lista').textContent = '📻 ' + (lista?.nome || nomeDaFiltri());
+  $('classifica-vuota').classList.toggle('hidden', !!lista);
+  $('sezione-liste').classList.toggle('hidden', !lista);
   mostraAlbum();
+}
+function apriClassifica() {
+  mostraClassifica();
+  if ($('classifica').classList.contains('hidden')) mostra('classifica');
 }
 
 // ---------- Filtri ----------
@@ -139,18 +140,11 @@ $('btn-elimina').addEventListener('click', () => {
   const l = listaAttiva();
   if (!l || !confirm(`Eliminare la classifica "${l.nome}" da questo telefono?`)) return;
   scriviListe(leggiListe().filter((x) => x.id !== l.id));
-  idListaAttiva = null;
-  mostraHome();
+  mostraClassifica();
 });
 
-$('btn-rinomina').addEventListener('click', () => {
-  const l = listaAttiva();
-  if (!l) return;
-  const nome = prompt('Nuovo nome della classifica:', l.nome);
-  if (!nome?.trim()) return;
-  scriviListe(leggiListe().map((x) => (x.id === l.id ? { ...x, nome: nome.trim() } : x)));
-  mostraHome();
-});
+$('btn-classifica').addEventListener('click', apriClassifica);
+$('btn-torna-radio').addEventListener('click', () => history.back());
 
 // ---------- Link di ProgArchives con i filtri ----------
 // Il modulo dei filtri di ProgArchives sul telefono non funziona: l'app costruisce lo stesso indirizzo.
@@ -276,7 +270,7 @@ function aggiornaLinkPA(e) {
   $('voti-testo').textContent = !votoMinScelto() && !votoMaxScelto() ? 'qualsiasi' : `${fmt1($('pa-voto').value)} – ${fmt1($('pa-voto-max').value)}`;
   $('naz-scelta').textContent = nomeNazione($('pa-nazione').value);
   $('btn-tutte').classList.toggle('acceso', !$('pa-nazione').value);
-  $('link-progarchives').href = linkProgArchives();
+  $('link-progarchives').href = $('link-progarchives-2').href = linkProgArchives();
   $('nota-voto-max').classList.toggle('hidden', !votoMaxScelto());
   scrivi('prog_filtri_pa', {
     nazione: $('pa-nazione').value, quanti: $('pa-quanti').value,
@@ -359,7 +353,7 @@ const globo = (() => {
           $('pa-nazione').value = t.dataset.pa;
           aggiornaLinkPA();
         } else {
-          $('naz-scelta').textContent = 'questa nazione non c\'è su ProgArchives';
+          $('nota-globo').textContent = 'Questa nazione non c\'è su ProgArchives.';
         }
       }
     }
@@ -463,7 +457,9 @@ $('btn-microfono').addEventListener('click', () => {
 });
 
 // ---------- Incolla la classifica ----------
+let incollaDaClassifica = false;
 function apriIncolla() {
+  incollaDaClassifica = !$('classifica').classList.contains('hidden');
   $('testo-incollato').value = '';
   $('nome-lista').value = nomeDaFiltri();
   $('stato-incolla').textContent = leggiChiaveClaude() ? ''
@@ -471,6 +467,7 @@ function apriIncolla() {
   mostra('incolla');
 }
 $('btn-incolla').addEventListener('click', apriIncolla);
+$('btn-incolla-2').addEventListener('click', apriIncolla);
 
 $('btn-appunti').addEventListener('click', async () => {
   try {
@@ -544,15 +541,18 @@ function salvaClassifica(album, nome) {
     return `Tutti gli album hanno un voto sopra ${fmtVoto(votoMax)}. Scegli 250 album su ProgArchives, oppure togli il voto massimo.`;
   }
   if (tolti) album = album.filter((x) => !(x.voto > votoMax));
+  const chiave = nomeDaFiltri();
   const lista = {
     id: Date.now().toString(36),
-    nome: nome || 'Classifica del ' + new Date().toLocaleDateString('it-IT'),
+    nome: nome || chiave,
+    chiave,
     creata: new Date().toISOString(),
     album,
   };
-  if (!scriviListe([...leggiListe(), lista])) return 'Memoria del telefono piena: elimina una classifica vecchia.';
+  // se c'era già una classifica con le stesse scelte, quella nuova la sostituisce
+  const altre = leggiListe().filter((l) => (l.chiave || l.nome) !== chiave);
+  if (!scriviListe([...altre, lista])) return 'Memoria del telefono piena: elimina una classifica vecchia.';
   idListaAttiva = lista.id;
-  scrivi('prog_lista_attiva', lista.id);
   scrivi('prog_aperto_pa', 0); // la classifica è arrivata: non serve più controllare gli appunti
   return '';
 }
@@ -598,8 +598,14 @@ $('btn-leggi').addEventListener('click', async () => {
   const errore = salvaClassifica(album, $('nome-lista').value.trim());
   if (errore) { stato.textContent = errore; return; }
   scrivi('prog_ultimi_appunti', firmaTesto(testo));
-  history.back(); // torna alla home, che mostra la nuova classifica
-  mostraHome();
+  // va alla pagina della classifica (se si arrivava da lì, ci torna)
+  if (incollaDaClassifica) {
+    history.back();
+  } else {
+    history.replaceState({ v: 'classifica' }, '');
+    mostraClassifica();
+    mostra('classifica', false);
+  }
 });
 
 // ---------- Album: scaletta dei brani ----------
@@ -891,7 +897,7 @@ $('btn-salva-yt').addEventListener('click', () => {
 
 // ---------- Copia di sicurezza (Esporta / Importa) ----------
 // Solo i dati dell'utente: niente chiavi e niente contatore del giorno.
-const DATI_BACKUP = ['prog_liste', 'prog_lista_attiva', 'prog_filtri', 'prog_scalette', 'prog_auto_avanti'];
+const DATI_BACKUP = ['prog_liste', 'prog_filtri', 'prog_scalette', 'prog_auto_avanti'];
 const infoBackup = (t) => { $('info-backup').textContent = t; };
 const riepilogo = (dati) => {
   let n = 0;
@@ -987,23 +993,24 @@ async function riceviDalSegnalibro() {
     return;
   }
   const errore = salvaClassifica(album, nomeDaFiltri());
-  mostraHome();
-  mostraAvviso(errore || `✅ Classifica aggiunta: ${listaAttiva().album.length} album.`);
+  if (errore) { mostraAvviso(errore); return; }
+  apriClassifica();
+  mostraAvviso(`✅ Classifica aggiunta: ${listaAttiva().album.length} album.`);
 }
 
 // Se la classifica è stata aggiunta in un'altra scheda, aggiorna anche questa
 window.addEventListener('storage', (e) => {
   if (e.key !== 'prog_liste' && e.key !== 'prog_lista_attiva') return;
-  idListaAttiva = leggi('prog_lista_attiva', idListaAttiva);
-  mostraHome();
+  if (!$('classifica').classList.contains('hidden')) mostraClassifica();
 });
 
 // ---------- Classifica copiata a mano: l'app se ne accorge quando torni ----------
 // Controlla gli appunti solo se poco prima (30 minuti) hai toccato "Sintonizza".
-$('link-progarchives').addEventListener('click', () => scrivi('prog_aperto_pa', Date.now()));
+for (const id of ['link-progarchives', 'link-progarchives-2']) $(id).addEventListener('click', () => scrivi('prog_aperto_pa', Date.now()));
 let controlloInCorso = false;
 async function controllaAppunti() {
-  if (controlloInCorso || document.visibilityState !== 'visible' || $('home').classList.contains('hidden')) return;
+  const suRadioOClassifica = !$('home').classList.contains('hidden') || !$('classifica').classList.contains('hidden');
+  if (controlloInCorso || document.visibilityState !== 'visible' || !suRadioOClassifica) return;
   const quando = leggi('prog_aperto_pa', 0);
   if (!quando || Date.now() - quando > 30 * 60 * 1000 || !navigator.clipboard?.readText) return;
   controlloInCorso = true;
@@ -1017,8 +1024,9 @@ async function controllaAppunti() {
     const nome = nomeDaFiltri();
     if (!confirm(`Hai copiato una classifica di ProgArchives con ${album.length} album.\nVuoi aggiungerla come "${nome}"?`)) return;
     const errore = salvaClassifica(album, nome);
-    mostraHome();
-    mostraAvviso(errore || `✅ Classifica aggiunta: ${listaAttiva().album.length} album.`);
+    if (errore) { mostraAvviso(errore); return; }
+    apriClassifica();
+    mostraAvviso(`✅ Classifica aggiunta: ${listaAttiva().album.length} album.`);
   } finally {
     controlloInCorso = false;
   }
@@ -1029,7 +1037,6 @@ window.addEventListener('focus', controllaAppunti);
 // ---------- Avvio ----------
 history.replaceState({ v: 'home' }, '');
 aggiornaQuota();
-mostraHome();
 riceviDalSegnalibro();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

@@ -66,3 +66,8 @@ Mauro: principiante, scrive in italiano, vuole istruzioni passo passo. Usa l'app
 - Due quadranti a forma di scala delle stazioni: Anni (Dal/Al) e Voto (Minimo/Massimo), lancetta rossa = minimo, dorata = massimo. Cursori a fondo scala = nessun limite.
 - "Sintonizza" apre ProgArchives; le classifiche salvate sono i tasti "Memorie".
 - Il mappamondo usa `mondo.js`: d3-array + d3-geo + topojson-client + mappa world-atlas 110m, tutto in un file (licenze ISC). Codici nazione: tabella `ISO_DA_PA` in app.js.
+
+## Pagina Classifica (al posto delle Memorie) — 15 novembre 2026
+- Sotto il mappamondo c'è il tasto "📋 <nazione> ›": apre la seconda pagina con la classifica che corrisponde alle scelte della radio (nazione + anni + voto, `chiave` = `nomeDaFiltri()`).
+- Se non c'è ancora, la pagina spiega come averla (Sintonizza → Copia → torna). Una nuova classifica con le stesse scelte sostituisce la vecchia.
+- "📻 Torna alla radio" (o ←) riporta alla pagina principale. Tolti i tasti Memorie e "Rinomina".

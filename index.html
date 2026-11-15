@@ -11,6 +11,9 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Avviso in cima a qualunque schermata -->
+  <p id="avviso" class="avviso hidden" role="status"></p>
+
   <!-- Schermata principale: le classifiche incollate da ProgArchives -->
   <main id="home" class="view">
     <header class="top">
@@ -18,15 +21,13 @@
       <button id="btn-settings" class="icon-btn" aria-label="Impostazioni">⚙️</button>
     </header>
 
-    <p id="avviso" class="avviso hidden" role="status"></p>
-
     <!-- La radio: si sceglie la classifica da prendere su ProgArchives -->
     <section id="radio" class="radio">
       <div class="radio-testa"><span class="radio-led"></span>Radio ProgArchives</div>
 
       <div class="radio-vetro">
         <svg id="globo" viewBox="0 0 300 300" role="img" aria-label="Mappamondo: giralo col dito e tocca una nazione"></svg>
-        <p class="radio-naz">Nazione: <b id="naz-scelta">Tutte</b></p>
+        <button id="btn-classifica" type="button" class="tasto-classifica" aria-label="Apri la classifica">📋 <span id="naz-scelta">Tutte</span> <span class="freccia">›</span></button>
         <p id="nota-globo" class="radio-nota">Gira il mappamondo col dito e tocca una nazione, oppure tocca 🎤 e dilla a voce</p>
       </div>
       <div class="radio-tasti">
@@ -60,40 +61,8 @@
       <div class="radio-tasti">
         <button id="btn-incolla" type="button" class="tasto">📋 Incolla la classifica</button>
       </div>
-
-      <!-- Tasti di memoria: le classifiche salvate -->
-      <div id="memorie" class="memorie hidden">
-        <p class="memorie-titolo">Memorie</p>
-        <div id="chips-liste" class="memorie-tasti"></div>
-      </div>
     </section>
 
-    <!-- Classifiche salvate -->
-    <section id="sezione-liste" class="lista-area hidden">
-      <h2 id="titolo-lista" class="titolo-lista"></h2>
-      <!-- Filtri sulla classifica scelta -->
-      <div class="filtri">
-        <label>Anni <input id="f-da" type="number" inputmode="numeric" placeholder="dal"> – <input id="f-a" type="number" inputmode="numeric" placeholder="al"></label>
-        <label>Voto da <select id="f-voto">
-          <option value="0">tutti</option><option value="3.5">3,5</option><option value="3.8">3,8</option>
-          <option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
-        </select></label>
-        <label>a <select id="f-voto-max">
-          <option value="0">tutti</option><option value="3.5">3,5</option><option value="3.8">3,8</option>
-          <option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
-        </select></label>
-        <label>Mostra <select id="f-quanti">
-          <option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="250" selected>tutti</option>
-        </select></label>
-        <input id="f-testo" type="search" placeholder="Cerca un album o un gruppo">
-      </div>
-      <p id="stato-lista" class="status"></p>
-      <ul id="album" class="album-lista"></ul>
-      <div class="riga-pulsanti fondo">
-        <button id="btn-rinomina" type="button" class="small-btn">✏️ Rinomina</button>
-        <button id="btn-elimina" type="button" class="small-btn">🗑 Elimina questa classifica</button>
-      </div>
-    </section>
     <!-- Il segnalibro-pulsante: porta la classifica nell'app senza copiare e incollare -->
     <section class="card">
       <details class="segnalibro">
@@ -113,6 +82,57 @@
     </section>
 
     <p class="quota"></p>
+  </main>
+
+  <!-- Seconda pagina: la classifica della nazione scelta sulla radio -->
+  <main id="classifica" class="view hidden">
+    <header class="top">
+      <button class="icon-btn indietro" aria-label="Torna alla radio">←</button>
+      <h2 id="titolo-lista" class="taglia"></h2>
+    </header>
+
+    <!-- Quando questa classifica non c'è ancora -->
+    <section id="classifica-vuota" class="card guida-vuota hidden">
+      <p><b>Questa classifica non c'è ancora.</b> Per averla:</p>
+      <ol>
+        <li>Tocca <b>📻 Sintonizza</b>: si apre ProgArchives.</li>
+        <li>Lì tieni il dito su una parola, scegli <b>Seleziona tutto</b> e poi <b>Copia</b>.</li>
+        <li>Torna qui: l'app se ne accorge da sola e la mostra.</li>
+      </ol>
+      <div class="riga-pulsanti">
+        <a id="link-progarchives-2" class="btn primary" href="https://www.progarchives.com/top-prog-albums.asp?salbumtypes=1" target="_blank" rel="noopener">📻 Sintonizza</a>
+        <button id="btn-incolla-2" type="button" class="btn">📋 Incolla</button>
+      </div>
+    </section>
+
+    <!-- La classifica -->
+    <section id="sezione-liste" class="lista-area">
+      <!-- Filtri sulla classifica scelta -->
+      <div class="filtri">
+        <label>Anni <input id="f-da" type="number" inputmode="numeric" placeholder="dal"> – <input id="f-a" type="number" inputmode="numeric" placeholder="al"></label>
+        <label>Voto da <select id="f-voto">
+          <option value="0">tutti</option><option value="3.5">3,5</option><option value="3.8">3,8</option>
+          <option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
+        </select></label>
+        <label>a <select id="f-voto-max">
+          <option value="0">tutti</option><option value="3.5">3,5</option><option value="3.8">3,8</option>
+          <option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
+        </select></label>
+        <label>Mostra <select id="f-quanti">
+          <option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="250" selected>tutti</option>
+        </select></label>
+        <input id="f-testo" type="search" placeholder="Cerca un album o un gruppo">
+      </div>
+      <p id="stato-lista" class="status"></p>
+      <ul id="album" class="album-lista"></ul>
+      <div class="riga-pulsanti fondo">
+        <button id="btn-elimina" type="button" class="small-btn">🗑 Elimina questa classifica</button>
+      </div>
+    </section>
+
+    <div class="riga-pulsanti fondo">
+      <button id="btn-torna-radio" type="button" class="btn primary">📻 Torna alla radio</button>
+    </div>
   </main>
 
   <!-- Incolla la classifica -->
