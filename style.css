@@ -50,22 +50,55 @@ body {
 .small-btn { padding: 8px 14px; border-radius: 18px; border: none; background: #333; color: var(--text); font-size: 0.9rem; }
 
 .card { margin: 8px 16px 16px; padding: 14px 16px; border-radius: 14px; background: var(--card); }
-.guida summary { cursor: pointer; padding: 2px 0; font-size: 1.05rem; font-weight: 700; list-style: none; }
-.guida summary::-webkit-details-marker { display: none; }
-.guida summary::after { content: " ▾"; color: var(--viola); }
-.guida details[open] summary::after { content: " ▴"; }
-.guida details[open] summary { margin-bottom: 12px; }
-.segnalibro { margin-top: 16px; padding-top: 12px; border-top: 1px solid #333; }
+/* ---------- La radio ---------- */
+.radio { margin: 4px 12px 16px; padding: 14px; border-radius: 26px; background: #3b2414; border: 6px solid #2a170b; color: #f3e3c3; }
+.radio-testa { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; letter-spacing: 0.5px; margin: 0 4px 10px; }
+.radio-led { width: 10px; height: 10px; border-radius: 50%; background: #ff5a3c; }
+.radio-vetro { background: #1b120a; border: 2px solid #c9a35a; border-radius: 18px; padding: 10px 10px 8px; text-align: center; }
+#globo { width: 100%; max-width: 300px; height: auto; display: block; margin: 0 auto; touch-action: none; cursor: grab; }
+#globo .mare { fill: #1f4e6b; }
+#globo .bordo-globo { fill: none; stroke: #c9a35a; stroke-width: 2; }
+#globo .paese { fill: #7fa46a; stroke: #1b120a; stroke-width: 0.5; cursor: pointer; }
+#globo .paese.spento { fill: #4d5a49; cursor: default; }
+#globo .paese.scelto { fill: var(--oro); }
+.radio-naz { margin: 6px 0 2px; font-size: 0.95rem; }
+.radio-naz b { color: var(--oro); }
+.radio-nota { margin: 6px 4px 0; font-size: 0.8rem; color: #cdb88f; text-align: center; line-height: 1.4; }
+.radio-tasti { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+.tasto { flex: 1 1 0; min-width: 0; padding: 11px 12px; border-radius: 22px; border: none; background: #c9a35a; color: #2a170b; font-size: 0.95rem; font-weight: 600; font-family: inherit; text-align: center; text-decoration: none; cursor: pointer; }
+select.tasto { appearance: none; -webkit-appearance: none; text-align-last: center; }
+.tasto.acceso { background: var(--oro); box-shadow: 0 0 0 2px #fff3d6; }
+.tasto.grande { flex: 1.4 1 0; font-size: 1.05rem; background: var(--oro); }
+.quadrante { margin-top: 12px; padding: 8px 12px 6px; border-radius: 12px; background: #f3e3c3; color: #3b2414; }
+.quad-titolo { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; }
+.quad-titolo b { font-weight: 700; }
+.scala { position: relative; height: 30px; margin: 0 9px 4px calc(4.2rem + 17px); border-bottom: 1px solid #3b2414; }
+.tacca { position: absolute; bottom: 0; transform: translateX(-50%); font-size: 0.7rem; }
+.tacca::after { content: ""; display: block; width: 1px; height: 6px; margin: 2px auto 0; background: #3b2414; }
+.lancetta { position: absolute; top: 15px; bottom: -4px; width: 3px; border-radius: 2px; transform: translateX(-50%); background: #c0392b; }
+.lancetta.max { background: #b8860b; }
+.cursore { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+.cursore span { flex: none; width: 4.2rem; }
+.cursore input { flex: 1; accent-color: #c0392b; }
+.cursore.max input { accent-color: #b8860b; }
+.memorie { margin-top: 14px; padding-top: 10px; border-top: 1px solid #5a3a22; }
+.memorie-titolo { margin: 0 4px 8px; font-size: 0.8rem; color: #cdb88f; letter-spacing: 0.5px; }
+.memorie-tasti { display: flex; flex-wrap: wrap; gap: 8px; }
+.memoria { padding: 8px 12px; border-radius: 6px; border: none; border-bottom: 4px solid #a8916a; background: #f3e3c3; color: #3b2414; font-size: 0.85rem; font-family: inherit; cursor: pointer; }
+.memoria.attiva { background: var(--oro); border-bottom-width: 1px; margin-top: 3px; font-weight: 700; }
+
+.segnalibro summary { cursor: pointer; padding: 2px 0; font-size: 1.05rem; font-weight: 700; list-style: none; }
+.segnalibro summary::-webkit-details-marker { display: none; }
+.segnalibro summary::after { content: " ▾"; color: var(--viola); }
+.segnalibro[open] summary::after { content: " ▴"; }
+.segnalibro[open] summary { margin-bottom: 12px; }
+.segnalibro { margin: 0; }
 .segnalibro summary { font-size: 0.95rem; color: var(--oro); }
 .segnalibro .btn { width: 100%; margin: 10px 0 8px; }
 .segnalibro textarea { font-family: monospace; font-size: 0.7rem; color: var(--muted); }
 .avviso { margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: #2a2340; border: 1px solid var(--viola); }
-.filtri-pa { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 12px; color: var(--muted); font-size: 0.9rem; }
-.filtri-pa label { display: flex; align-items: center; gap: 6px; }
-.filtri-pa input, .filtri-pa select { padding: 8px 10px; border-radius: 8px; border: 1px solid #333; background: var(--bg); color: var(--text); font-size: 1rem; }
-.filtri-pa input[type="number"] { width: 5.2em; }
-.guida ol { margin: 0 0 14px; padding-left: 20px; line-height: 1.45; color: #ddd; }
-.guida li { margin-bottom: 6px; }
+.segnalibro ol { margin: 0 0 14px; padding-left: 20px; line-height: 1.45; color: #ddd; }
+.segnalibro li { margin-bottom: 6px; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px; }
 .chip { padding: 6px 12px; border-radius: 16px; border: 1px solid #444; background: var(--card); color: var(--text); font-size: 0.9rem; }
@@ -142,3 +175,5 @@ textarea { width: 100%; resize: vertical; font-size: 0.85rem; }
 
 .quota { margin: 4px 16px 16px; color: var(--muted); font-size: 0.75rem; text-align: center; }
 .quota.quota-alta { color: #ffb020; font-weight: 600; }
+
+.titolo-lista { margin: 4px 16px 0; font-size: 1.1rem; color: var(--oro); }

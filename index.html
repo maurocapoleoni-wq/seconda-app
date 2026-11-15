@@ -20,57 +20,56 @@
 
     <p id="avviso" class="avviso hidden" role="status"></p>
 
-    <!-- Come si porta una classifica nell'app -->
-    <section id="guida" class="card guida">
-      <details id="guida-apri" open>
-      <summary>🔎 Nuova classifica da ProgArchives</summary>
-      <!-- Filtri: l'app prepara il link di ProgArchives già filtrato -->
-      <div class="filtri-pa">
-        <label>Nazione <select id="pa-nazione"></select></label>
-        <label>Anni <input id="pa-da" type="number" inputmode="numeric" placeholder="dal"> – <input id="pa-a" type="number" inputmode="numeric" placeholder="al"></label>
-        <label>Quanti album <select id="pa-quanti">
-          <option value="25">25</option><option value="50">50</option><option value="100" selected>100</option><option value="200">200</option><option value="250">250</option>
-        </select></label>
-        <label>Voto minimo <select id="pa-voto">
-          <option value="0">nessuno</option><option value="3.5">3,5</option><option value="3.8">3,8</option><option value="4">4,0</option><option value="4.2">4,2</option>
-        </select></label>
-        <label>Voto massimo <select id="pa-voto-max">
-          <option value="0">nessuno</option><option value="3.5">3,5</option><option value="3.8">3,8</option><option value="4">4,0</option><option value="4.2">4,2</option><option value="4.4">4,4</option>
-        </select></label>
+    <!-- La radio: si sceglie la classifica da prendere su ProgArchives -->
+    <section id="radio" class="radio">
+      <div class="radio-testa"><span class="radio-led"></span>Radio ProgArchives</div>
+
+      <div class="radio-vetro">
+        <svg id="globo" viewBox="0 0 300 300" role="img" aria-label="Mappamondo: giralo col dito e tocca una nazione"></svg>
+        <p class="radio-naz">Nazione: <b id="naz-scelta">Tutte</b></p>
+        <p class="radio-nota">Gira il mappamondo col dito e tocca una nazione</p>
       </div>
-      <p id="nota-voto-max" class="hint hidden">ProgArchives non ha il voto massimo: l'app toglie gli album più votati dopo che hai incollato la classifica. Scegli 250 album, così te ne restano di più.</p>
-      <ol>
-        <li>Scegli nazione, anni e quanti album, poi tocca <b>Apri ProgArchives</b>: si apre la classifica già filtrata.</li>
-        <li>Tieni il dito su una parola della pagina, scegli <b>Seleziona tutto</b> e poi <b>Copia</b>.</li>
-        <li>Torna qui, tocca <b>Incolla la classifica</b>.</li>
-      </ol>
-      <div class="riga-pulsanti">
-        <a id="link-progarchives" class="btn" href="https://www.progarchives.com/top-prog-albums.asp?salbumtypes=1" target="_blank" rel="noopener">1. Apri ProgArchives</a>
-        <button id="btn-incolla" type="button" class="btn primary">2. Incolla la classifica</button>
+      <div class="radio-tasti">
+        <button id="btn-tutte" type="button" class="tasto">🌍 Tutte le nazioni</button>
+        <select id="pa-nazione" class="tasto" aria-label="Elenco delle nazioni"></select>
       </div>
 
-      <!-- Il segnalibro-pulsante: porta la classifica nell'app senza copiare e incollare -->
-      <details class="segnalibro">
-        <summary>⚡ Più veloce: il pulsante «Manda al Prog»</summary>
-        <p class="hint">Con questo pulsante non copi e non incolli più: quando vedi la classifica su ProgArchives lo tocchi e la classifica arriva qui da sola. Si prepara <b>una volta sola</b> per telefono, in Chrome (su Brave è quasi uguale):</p>
-        <ol>
-          <li>Tocca <b>📋 Copia il codice</b> qui sotto.</li>
-          <li>Apri una pagina qualsiasi in Chrome (va bene anche ProgArchives), tocca <b>⋮</b> (i tre puntini in alto a destra) e poi la stella <b>☆</b>.</li>
-          <li>In basso compare «Aggiunto ai preferiti»: tocca <b>Modifica</b>.</li>
-          <li>Nel <b>Nome</b> scrivi <b>Manda al Prog</b>. Nell'<b>URL</b> cancella tutto, tieni il dito e scegli <b>Incolla</b>. Poi tocca la freccia ← in alto a sinistra per salvare.</li>
-        </ol>
-        <p class="hint"><b>Come si usa:</b> sulla pagina con la classifica di ProgArchives tocca la barra dell'indirizzo in alto, scrivi <b>Manda</b> e tocca <b>Manda al Prog</b> (quello con la stellina) tra i suggerimenti.</p>
-        <button id="btn-copia-segnalibro" type="button" class="btn">📋 Copia il codice</button>
-        <textarea id="codice-segnalibro" rows="3" readonly></textarea>
-        <p id="info-segnalibro" class="hint"></p>
-      </details>
-      </details>
+      <div class="quadrante">
+        <div class="quad-titolo"><span>Anni</span><b id="anni-testo"></b></div>
+        <div class="scala" id="scala-anni"></div>
+        <label class="cursore"><span>Dal</span><input id="pa-da" type="range" step="1"></label>
+        <label class="cursore max"><span>Al</span><input id="pa-a" type="range" step="1"></label>
+      </div>
+
+      <div class="quadrante">
+        <div class="quad-titolo"><span>Voto</span><b id="voti-testo"></b></div>
+        <div class="scala" id="scala-voti"></div>
+        <label class="cursore"><span>Minimo</span><input id="pa-voto" type="range" min="3" max="5" step="0.1"></label>
+        <label class="cursore max"><span>Massimo</span><input id="pa-voto-max" type="range" min="3" max="5" step="0.1"></label>
+      </div>
+      <p id="nota-voto-max" class="radio-nota hidden">ProgArchives non ha il voto massimo: l'app toglie gli album più votati quando incolli la classifica. Scegli 250 album, così te ne restano di più.</p>
+
+      <div class="radio-tasti">
+        <select id="pa-quanti" class="tasto" aria-label="Quanti album">
+          <option value="25">25 album</option><option value="50">50 album</option><option value="100" selected>100 album</option><option value="200">200 album</option><option value="250">250 album</option>
+        </select>
+        <a id="link-progarchives" class="tasto grande" href="https://www.progarchives.com/top-prog-albums.asp?salbumtypes=1" target="_blank" rel="noopener">📻 Sintonizza</a>
+      </div>
+      <p class="radio-nota"><b>Sintonizza</b> apre la classifica su ProgArchives. Lì tieni il dito su una parola, scegli <b>Seleziona tutto</b> e <b>Copia</b>, poi torna qui: l'app se ne accorge da sola.</p>
+      <div class="radio-tasti">
+        <button id="btn-incolla" type="button" class="tasto">📋 Incolla la classifica</button>
+      </div>
+
+      <!-- Tasti di memoria: le classifiche salvate -->
+      <div id="memorie" class="memorie hidden">
+        <p class="memorie-titolo">Memorie</p>
+        <div id="chips-liste" class="memorie-tasti"></div>
+      </div>
     </section>
 
     <!-- Classifiche salvate -->
     <section id="sezione-liste" class="lista-area hidden">
-      <div id="chips-liste" class="chips"></div>
-
+      <h2 id="titolo-lista" class="titolo-lista"></h2>
       <!-- Filtri sulla classifica scelta -->
       <div class="filtri">
         <label>Anni <input id="f-da" type="number" inputmode="numeric" placeholder="dal"> – <input id="f-a" type="number" inputmode="numeric" placeholder="al"></label>
@@ -94,6 +93,24 @@
         <button id="btn-elimina" type="button" class="small-btn">🗑 Elimina questa classifica</button>
       </div>
     </section>
+    <!-- Il segnalibro-pulsante: porta la classifica nell'app senza copiare e incollare -->
+    <section class="card">
+      <details class="segnalibro">
+        <summary>⚡ Pulsante «Manda al Prog»</summary>
+        <p class="hint">Con questo pulsante non copi e non incolli più: quando vedi la classifica su ProgArchives lo tocchi e la classifica arriva qui da sola. Si prepara <b>una volta sola</b> per telefono, in Chrome (su Brave è quasi uguale):</p>
+        <ol>
+          <li>Tocca <b>📋 Copia il codice</b> qui sotto.</li>
+          <li>Apri una pagina qualsiasi in Chrome (va bene anche ProgArchives), tocca <b>⋮</b> (i tre puntini in alto a destra) e poi la stella <b>☆</b>.</li>
+          <li>In basso compare «Aggiunto ai preferiti»: tocca <b>Modifica</b>.</li>
+          <li>Nel <b>Nome</b> scrivi <b>Manda al Prog</b>. Nell'<b>URL</b> cancella tutto, tieni il dito e scegli <b>Incolla</b>. Poi tocca la freccia ← in alto a sinistra per salvare.</li>
+        </ol>
+        <p class="hint"><b>Come si usa:</b> sulla pagina con la classifica di ProgArchives tocca la barra dell'indirizzo in alto, scrivi <b>Manda</b> e tocca <b>Manda al Prog</b> (quello con la stellina) tra i suggerimenti.</p>
+        <button id="btn-copia-segnalibro" type="button" class="btn">📋 Copia il codice</button>
+        <textarea id="codice-segnalibro" rows="3" readonly></textarea>
+        <p id="info-segnalibro" class="hint"></p>
+      </details>
+    </section>
+
     <p class="quota"></p>
   </main>
 
@@ -186,6 +203,7 @@
     </div>
   </main>
 
+  <script src="mondo.js"></script>
   <script src="claude.js"></script>
   <script src="app.js"></script>
 </body>

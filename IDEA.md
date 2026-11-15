@@ -60,3 +60,9 @@ Mauro: principiante, scrive in italiano, vuole istruzioni passo passo. Usa l'app
 - Il codice del segnalibro lo prepara l'app (pulsante «Copia il codice» nella guida). Se cambia l'indirizzo dell'app o la funzione `mandaAlProg`, va rifatto il segnalibro.
 - Riserva: se Mauro copia la pagina a mano, al ritorno l'app se ne accorge da sola (solo nei 30 minuti dopo aver toccato «Apri ProgArchives») e chiede se aggiungerla.
 - Provato con una pagina finta: la vera pagina di ProgArchives non si può aprire dal browser di Claude (controllo anti-robot, che non va aggirato).
+
+## La radio (nuova schermata principale) — 15 novembre 2026
+- In cima c'è una radio d'epoca: nel vetro un mappamondo (si gira col dito, un tocco sceglie la nazione), il tasto "Tutte le nazioni" e un elenco per le nazioni che sulla mappa non si vedono (Andorra, Bahrein, Malta, Monaco, Singapore, Jugoslavia, Multinazionale, Varie).
+- Due quadranti a forma di scala delle stazioni: Anni (Dal/Al) e Voto (Minimo/Massimo), lancetta rossa = minimo, dorata = massimo. Cursori a fondo scala = nessun limite.
+- "Sintonizza" apre ProgArchives; le classifiche salvate sono i tasti "Memorie".
+- Il mappamondo usa `mondo.js`: d3-array + d3-geo + topojson-client + mappa world-atlas 110m, tutto in un file (licenze ISC). Codici nazione: tabella `ISO_DA_PA` in app.js.

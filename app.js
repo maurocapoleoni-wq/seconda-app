@@ -53,31 +53,19 @@ function mostraHome() {
   const liste = leggiListe();
   const attiva = listaAttiva();
   $('sezione-liste').classList.toggle('hidden', !attiva);
-  // i filtri per una nuova classifica stanno sempre in cima: aperti se non c'è ancora nessuna classifica,
-  // chiusi (basta toccare il titolo) quando ce n'è già una
-  if (!attiva) $('guida-apri').open = true;
-  else if (!mostraHome.giaAperta) $('guida-apri').open = false;
-  mostraHome.giaAperta = true;
+  $('memorie').classList.toggle('hidden', !liste.length);
+  $('titolo-lista').textContent = attiva ? '📻 ' + attiva.nome : '';
 
   const box = $('chips-liste');
   box.innerHTML = '';
   for (const l of liste) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'chip' + (l.id === attiva?.id ? ' attiva' : '');
+    b.className = 'memoria' + (l.id === attiva?.id ? ' attiva' : '');
     b.textContent = `${l.nome} (${l.album.length})`;
     b.addEventListener('click', () => { idListaAttiva = l.id; scrivi('prog_lista_attiva', l.id); mostraHome(); });
     box.append(b);
   }
-  const nuova = document.createElement('button');
-  nuova.type = 'button';
-  nuova.className = 'chip nuova';
-  nuova.textContent = '+ Nuova classifica';
-  nuova.addEventListener('click', () => {
-    $('guida-apri').open = true;
-    $('guida').scrollIntoView({ behavior: 'smooth' });
-  });
-  box.append(nuova);
   mostraAlbum();
 }
 
@@ -191,51 +179,203 @@ const NAZIONI_PA = [['', 'Tutte'], ...[
   ['198', 'Uruguay'], ['199', 'Uzbekistan'], ['140', 'Varie'], ['200', 'Venezuela'], ['203', 'Jugoslavia'],
 ].sort((x, y) => x[1].localeCompare(y[1], 'it'))];
 
+// ---------- La radio: mappamondo, cursori e tasti ----------
+const ANNO_MIN = 1960, ANNO_MAX = new Date().getFullYear();
+const VOTO_MIN = 3, VOTO_MAX = 5; // cursori del voto a fondo scala = nessun limite
+// Numero della nazione su ProgArchives → codice ISO usato dalla mappa del mappamondo.
+// Mancano le nazioni troppo piccole per la mappa (Andorra, Bahrein, Malta, Monaco, Singapore)
+// e Jugoslavia, Multinazionale, Varie: quelle si scelgono dall'elenco.
+const ISO_DA_PA = {
+  4: '012', 1: '032', 11: '051', 13: '036', 14: '040', 22: '056', 21: '112', 27: '068', 108: '076', 32: '100',
+  37: '124', 42: '152', 43: '156', 46: '170', 50: '188', 52: '191', 53: '192', 55: '203', 56: '208', 61: '818',
+  65: '233', 70: '246', 71: '250', 76: '268', 77: '276', 80: '300', 91: '348', 92: '352', 93: '356', 94: '360',
+  95: '364', 96: '368', 97: '372', 98: '376', 99: '380', 101: '392', 103: '398', 106: '410', 109: '414', 112: '428',
+  113: '422', 118: '440', 119: '442', 220: '807', 121: '450', 123: '458', 132: '484', 134: '498', 219: '499', 145: '528',
+  147: '554', 148: '558', 153: '578', 155: '586', 222: '275', 157: '591', 160: '604', 161: '608', 162: '616', 163: '620',
+  164: '630', 167: '642', 168: '643', 218: '688', 211: '703', 212: '705', 215: '710', 207: '724', 178: '752', 179: '756',
+  180: '760', 181: '158', 184: '764', 189: '788', 190: '792', 194: '804', 195: '784', 206: '826', 197: '840', 198: '858',
+  199: '860', 200: '862',
+};
+const PA_DA_ISO = Object.fromEntries(Object.entries(ISO_DA_PA).map(([pa, iso]) => [iso, pa]));
+const nomeNazione = (num) => (NAZIONI_PA.find(([n]) => n === num) || ['', 'Tutte'])[1];
+const fmt1 = (v) => Number(v).toLocaleString('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+for (const [num, nome] of NAZIONI_PA) $('pa-nazione').append(new Option(num ? nome : 'Elenco…', num));
+for (const id of ['pa-da', 'pa-a']) { $(id).min = ANNO_MIN; $(id).max = ANNO_MAX; }
+
+// Le scelte restano salvate. I valori vecchi ('' oppure '0') vogliono dire "nessun limite".
 const sceltaPA = leggi('prog_filtri_pa', { nazione: '77', da: '', a: '', quanti: '100', voto: '0', votoMax: '0' });
-for (const [num, nome] of NAZIONI_PA) $('pa-nazione').append(new Option(nome, num));
 $('pa-nazione').value = NAZIONI_PA.some(([n]) => n === sceltaPA.nazione) ? sceltaPA.nazione : '';
-$('pa-da').value = sceltaPA.da;
-$('pa-a').value = sceltaPA.a;
+$('pa-da').value = sceltaPA.da || ANNO_MIN;
+$('pa-a').value = sceltaPA.a || ANNO_MAX;
 $('pa-quanti').value = sceltaPA.quanti;
-$('pa-voto').value = sceltaPA.voto || '0';
-$('pa-voto-max').value = sceltaPA.votoMax || '0';
+if (!$('pa-quanti').value) $('pa-quanti').value = '100';
+$('pa-voto').value = Number(sceltaPA.voto) || VOTO_MIN;
+$('pa-voto-max').value = Number(sceltaPA.votoMax) || VOTO_MAX;
+
+const annoDa = () => Number($('pa-da').value);
+const annoA = () => Number($('pa-a').value);
+const tuttiGliAnni = () => annoDa() <= ANNO_MIN && annoA() >= ANNO_MAX;
+const votoMinScelto = () => (Number($('pa-voto').value) > VOTO_MIN ? Number($('pa-voto').value) : 0); // 0 = nessun limite
+const votoMaxScelto = () => (Number($('pa-voto-max').value) < VOTO_MAX ? Number($('pa-voto-max').value) : 0);
 
 function linkProgArchives() {
   const p = new URLSearchParams();
   p.append('ssubgenres', '');
-  const da = Number($('pa-da').value) || 0;
-  const a = Number($('pa-a').value) || 0;
-  if (da || a) {
-    const fine = a || new Date().getFullYear();
-    for (let anno = fine; anno >= (da || fine); anno--) p.append('syears', anno);
-  } else {
-    p.append('syears', '');
-  }
+  if (tuttiGliAnni()) p.append('syears', '');
+  else for (let anno = annoA(); anno >= annoDa(); anno--) p.append('syears', anno);
   p.append('salbumtypes', '1');
   p.append('scountries', $('pa-nazione').value);
   p.append('sminratings', '0');
   p.append('smaxratings', '0');
-  p.append('sminavgratings', $('pa-voto').value); // voto medio minimo (0 = nessun limite)
+  p.append('sminavgratings', votoMinScelto()); // voto medio minimo (0 = nessun limite)
   p.append('smaxresults', $('pa-quanti').value); // ProgArchives arriva al massimo a 250
   return 'https://www.progarchives.com/top-prog-albums.asp?' + p + '#list';
 }
 
-// Nome proposto per la classifica, es. "Germania 2000–2020"
+// Nome proposto per la classifica, es. "Germania 1970–1980 voto 3,8–5,0"
 function nomeDaFiltri() {
-  const nazione = $('pa-nazione').selectedOptions[0]?.text || '';
-  const da = $('pa-da').value, a = $('pa-a').value;
-  const anni = da && a ? `${da}–${a}` : da ? `dal ${da}` : a ? `fino al ${a}` : '';
-  const max = Number($('pa-voto-max').value) ? `voto fino a ${fmtVoto($('pa-voto-max').value)}` : '';
-  return [nazione === 'Tutte' ? 'Tutte le nazioni' : nazione, anni, max].filter(Boolean).join(' ');
+  const nazione = $('pa-nazione').value ? nomeNazione($('pa-nazione').value) : 'Tutte le nazioni';
+  const anni = tuttiGliAnni() ? '' : annoDa() === annoA() ? String(annoDa()) : `${annoDa()}–${annoA()}`;
+  const voto = votoMinScelto() || votoMaxScelto() ? `voto ${fmt1($('pa-voto').value)}–${fmt1($('pa-voto-max').value)}` : '';
+  return [nazione, anni, voto].filter(Boolean).join(' ');
 }
 
-function aggiornaLinkPA() {
-  $('link-progarchives').href = linkProgArchives();
-  scrivi('prog_filtri_pa', { nazione: $('pa-nazione').value, da: $('pa-da').value, a: $('pa-a').value, quanti: $('pa-quanti').value, voto: $('pa-voto').value, votoMax: $('pa-voto-max').value });
-  $('nota-voto-max').classList.toggle('hidden', $('pa-voto-max').value === '0');
+// Scala delle "stazioni" con le due lancette (rossa = minimo, dorata = massimo)
+function creaScala(el, min, max, passo, etichetta) {
+  for (let v = min; v <= max + 1e-9; v += passo) {
+    const t = document.createElement('span');
+    t.className = 'tacca';
+    t.style.left = ((v - min) / (max - min)) * 100 + '%';
+    t.textContent = etichetta(v);
+    el.append(t);
+  }
+  const l1 = document.createElement('span'), l2 = document.createElement('span');
+  l1.className = 'lancetta';
+  l2.className = 'lancetta max';
+  el.append(l1, l2);
+  return (v1, v2) => {
+    l1.style.left = ((v1 - min) / (max - min)) * 100 + '%';
+    l2.style.left = ((v2 - min) / (max - min)) * 100 + '%';
+  };
 }
+const lancetteAnni = creaScala($('scala-anni'), ANNO_MIN, ANNO_MAX, 10, (v) => "'" + String(v).slice(2));
+const lancetteVoti = creaScala($('scala-voti'), VOTO_MIN, VOTO_MAX, 0.5, fmt1);
+
+function aggiornaLinkPA(e) {
+  // le lancette non si incrociano: se il minimo supera il massimo, l'altro cursore lo segue
+  const coppie = [['pa-da', 'pa-a'], ['pa-voto', 'pa-voto-max']];
+  for (const [min, max] of coppie) {
+    if (Number($(min).value) > Number($(max).value)) {
+      if (e?.target?.id === max) $(min).value = $(max).value; else $(max).value = $(min).value;
+    }
+  }
+  lancetteAnni(annoDa(), annoA());
+  lancetteVoti(Number($('pa-voto').value), Number($('pa-voto-max').value));
+  $('anni-testo').textContent = tuttiGliAnni() ? 'tutti gli anni' : `${annoDa()} – ${annoA()}`;
+  $('voti-testo').textContent = !votoMinScelto() && !votoMaxScelto() ? 'qualsiasi' : `${fmt1($('pa-voto').value)} – ${fmt1($('pa-voto-max').value)}`;
+  $('naz-scelta').textContent = nomeNazione($('pa-nazione').value);
+  $('btn-tutte').classList.toggle('acceso', !$('pa-nazione').value);
+  $('link-progarchives').href = linkProgArchives();
+  $('nota-voto-max').classList.toggle('hidden', !votoMaxScelto());
+  scrivi('prog_filtri_pa', {
+    nazione: $('pa-nazione').value, quanti: $('pa-quanti').value,
+    da: tuttiGliAnni() ? '' : String(annoDa()), a: tuttiGliAnni() ? '' : String(annoA()),
+    voto: String(votoMinScelto()), votoMax: String(votoMaxScelto()),
+  });
+  globo.disegna();
+}
+
+// ---------- Il mappamondo ----------
+// Si gira trascinando col dito; un tocco senza trascinare sceglie la nazione.
+const globo = (() => {
+  const svg = $('globo');
+  const NS = 'http://www.w3.org/2000/svg';
+  const LATO = 300, R = 146;
+  const paesi = topojson.feature(MONDO, MONDO.objects.countries).features;
+  const proiezione = d3.geoOrthographic().scale(R).translate([LATO / 2, LATO / 2]).clipAngle(90).rotate([-12, -45]);
+  const percorso = d3.geoPath(proiezione);
+  const cerchio = (classe) => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', LATO / 2); c.setAttribute('cy', LATO / 2); c.setAttribute('r', R);
+    c.setAttribute('class', classe);
+    return c;
+  };
+  const gruppo = document.createElementNS(NS, 'g');
+  svg.append(cerchio('mare'), gruppo, cerchio('bordo-globo'));
+  const forme = paesi.map((f) => {
+    const p = document.createElementNS(NS, 'path');
+    p.dataset.pa = PA_DA_ISO[f.id] || '';
+    p.setAttribute('class', p.dataset.pa ? 'paese' : 'paese spento');
+    gruppo.append(p);
+    return [f, p];
+  });
+
+  function disegna() {
+    const scelta = $('pa-nazione').value;
+    for (const [f, p] of forme) {
+      p.setAttribute('d', percorso(f) || '');
+      p.classList.toggle('scelto', !!scelta && p.dataset.pa === scelta);
+    }
+  }
+
+  // gira dolcemente il mappamondo fino a mettere la nazione al centro
+  function giraVerso(pa) {
+    const forma = forme.find(([, p]) => p.dataset.pa === pa);
+    if (!forma) return;
+    const [lon, lat] = d3.geoCentroid(forma[0]);
+    const da = proiezione.rotate(), a = [-lon, Math.max(-60, Math.min(60, -lat)), 0];
+    let d0 = ((a[0] - da[0] + 540) % 360) - 180; // la strada più corta
+    const t0 = performance.now();
+    const passo = (t) => {
+      const k = Math.min(1, (t - t0) / 600), e = k * (2 - k);
+      proiezione.rotate([da[0] + d0 * e, da[1] + (a[1] - da[1]) * e, 0]);
+      disegna();
+      if (k < 1) requestAnimationFrame(passo);
+    };
+    requestAnimationFrame(passo);
+  }
+
+  let inizio = null, trascinato = false;
+  svg.addEventListener('pointerdown', (e) => {
+    inizio = { x: e.clientX, y: e.clientY, r: proiezione.rotate() };
+    trascinato = false;
+    svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener('pointermove', (e) => {
+    if (!inizio) return;
+    const dx = e.clientX - inizio.x, dy = e.clientY - inizio.y;
+    if (Math.abs(dx) + Math.abs(dy) > 6) trascinato = true;
+    if (!trascinato) return;
+    const k = (0.45 * LATO) / svg.getBoundingClientRect().width;
+    proiezione.rotate([inizio.r[0] + dx * k, Math.max(-85, Math.min(85, inizio.r[1] - dy * k)), 0]);
+    disegna();
+  });
+  const fine = (e) => {
+    if (inizio && !trascinato && e.type === 'pointerup') {
+      const t = document.elementFromPoint(e.clientX, e.clientY);
+      if (t?.classList?.contains('paese')) {
+        if (t.dataset.pa) {
+          $('pa-nazione').value = t.dataset.pa;
+          aggiornaLinkPA();
+        } else {
+          $('naz-scelta').textContent = 'questa nazione non c\'è su ProgArchives';
+        }
+      }
+    }
+    inizio = null;
+  };
+  svg.addEventListener('pointerup', fine);
+  svg.addEventListener('pointercancel', fine);
+
+  return { disegna, giraVerso };
+})();
+
+$('btn-tutte').addEventListener('click', () => { $('pa-nazione').value = ''; aggiornaLinkPA(); });
+$('pa-nazione').addEventListener('input', () => globo.giraVerso($('pa-nazione').value));
 ['pa-nazione', 'pa-da', 'pa-a', 'pa-quanti', 'pa-voto', 'pa-voto-max'].forEach((id) => $(id).addEventListener('input', aggiornaLinkPA));
 aggiornaLinkPA();
+if ($('pa-nazione').value) globo.giraVerso($('pa-nazione').value);
 
 // ---------- Incolla la classifica ----------
 function apriIncolla() {
@@ -313,7 +453,7 @@ function leggiClassificaDaSolo(testo) {
 // Toglie gli album sopra il voto massimo (ProgArchives non ha questo filtro) e salva la classifica.
 // Restituisce un messaggio se qualcosa non va, oppure '' se è andato tutto bene.
 function salvaClassifica(album, nome) {
-  const votoMax = Number($('pa-voto-max').value) || 0;
+  const votoMax = votoMaxScelto();
   const tolti = votoMax ? album.filter((x) => x.voto > votoMax).length : 0;
   if (tolti && tolti === album.length) {
     return `Tutti gli album hanno un voto sopra ${fmtVoto(votoMax)}. Scegli 250 album su ProgArchives, oppure togli il voto massimo.`;
@@ -774,7 +914,7 @@ window.addEventListener('storage', (e) => {
 });
 
 // ---------- Classifica copiata a mano: l'app se ne accorge quando torni ----------
-// Controlla gli appunti solo se poco prima (30 minuti) hai toccato "Apri ProgArchives".
+// Controlla gli appunti solo se poco prima (30 minuti) hai toccato "Sintonizza".
 $('link-progarchives').addEventListener('click', () => scrivi('prog_aperto_pa', Date.now()));
 let controlloInCorso = false;
 async function controllaAppunti() {
