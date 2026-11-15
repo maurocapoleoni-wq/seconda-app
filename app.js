@@ -197,15 +197,17 @@ const fmt1 = (v) => Number(v).toLocaleString('it-IT', { minimumFractionDigits: 1
 for (const [num, nome] of NAZIONI_PA) $('pa-nazione').append(new Option(num ? nome : 'Elenco…', num));
 for (const id of ['pa-da', 'pa-a']) { $(id).min = ANNO_MIN; $(id).max = ANNO_MAX; }
 
-// Le scelte restano salvate. I valori vecchi ('' oppure '0') vogliono dire "nessun limite".
-const sceltaPA = leggi('prog_filtri_pa', { nazione: '77', da: '', a: '', quanti: '100', voto: '0', votoMax: '0' });
-$('pa-nazione').value = NAZIONI_PA.some(([n]) => n === sceltaPA.nazione) ? sceltaPA.nazione : '';
-$('pa-da').value = sceltaPA.da || ANNO_MIN;
-$('pa-a').value = sceltaPA.a || ANNO_MAX;
+// Solo il numero di album resta quello dell'ultima volta.
+// All'apertura la radio riparte da "Tutte le nazioni" e con i cursori a fondo scala
+// (minimo tutto a sinistra, massimo tutto a destra): nessun limite di nazione, anni o voto.
+const sceltaPA = leggi('prog_filtri_pa', { quanti: '100' });
+$('pa-nazione').value = '';
+$('pa-da').value = ANNO_MIN;
+$('pa-a').value = ANNO_MAX;
 $('pa-quanti').value = sceltaPA.quanti;
 if (!$('pa-quanti').value) $('pa-quanti').value = '100';
-$('pa-voto').value = Number(sceltaPA.voto) || VOTO_MIN;
-$('pa-voto-max').value = Number(sceltaPA.votoMax) || VOTO_MAX;
+$('pa-voto').value = VOTO_MIN;
+$('pa-voto-max').value = VOTO_MAX;
 
 const annoDa = () => Number($('pa-da').value);
 const annoA = () => Number($('pa-a').value);
@@ -369,7 +371,6 @@ $('btn-tutte').addEventListener('click', () => { $('pa-nazione').value = ''; agg
 $('pa-nazione').addEventListener('input', () => globo.giraVerso($('pa-nazione').value));
 ['pa-nazione', 'pa-da', 'pa-a', 'pa-quanti', 'pa-voto', 'pa-voto-max'].forEach((id) => $(id).addEventListener('input', aggiornaLinkPA));
 aggiornaLinkPA();
-if ($('pa-nazione').value) globo.giraVerso($('pa-nazione').value);
 
 // ---------- Il microfono: dici una nazione e la radio la accende ----------
 // Usa il riconoscimento della voce del browser (funziona in Chrome; Brave di solito lo blocca).
