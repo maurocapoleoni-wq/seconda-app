@@ -310,6 +310,40 @@ function leggiClassificaDaSolo(testo) {
   return album;
 }
 
+// Toglie gli album sopra il voto massimo (ProgArchives non ha questo filtro) e salva la classifica.
+// Restituisce un messaggio se qualcosa non va, oppure '' se è andato tutto bene.
+function salvaClassifica(album, nome) {
+  const votoMax = Number($('pa-voto-max').value) || 0;
+  const tolti = votoMax ? album.filter((x) => x.voto > votoMax).length : 0;
+  if (tolti && tolti === album.length) {
+    return `Tutti gli album hanno un voto sopra ${fmtVoto(votoMax)}. Scegli 250 album su ProgArchives, oppure togli il voto massimo.`;
+  }
+  if (tolti) album = album.filter((x) => !(x.voto > votoMax));
+  const lista = {
+    id: Date.now().toString(36),
+    nome: nome || 'Classifica del ' + new Date().toLocaleDateString('it-IT'),
+    creata: new Date().toISOString(),
+    album,
+  };
+  if (!scriviListe([...leggiListe(), lista])) return 'Memoria del telefono piena: elimina una classifica vecchia.';
+  idListaAttiva = lista.id;
+  scrivi('prog_lista_attiva', lista.id);
+  scrivi('prog_aperto_pa', 0); // la classifica è arrivata: non serve più controllare gli appunti
+  return '';
+}
+
+// "Firma" di un testo copiato, per non proporre due volte la stessa classifica
+const firmaTesto = (t) => t.length + ':' + t.slice(0, 120) + t.slice(-120);
+
+// Avviso in cima alla schermata principale (sparisce da solo)
+function mostraAvviso(testo) {
+  const p = $('avviso');
+  p.textContent = testo;
+  p.classList.remove('hidden');
+  clearTimeout(mostraAvviso.timer);
+  mostraAvviso.timer = setTimeout(() => p.classList.add('hidden'), 10000);
+}
+
 $('btn-leggi').addEventListener('click', async () => {
   const testo = $('testo-incollato').value.trim();
   const stato = $('stato-incolla');
@@ -330,29 +364,15 @@ $('btn-leggi').addEventListener('click', async () => {
     return;
   }
   btn.disabled = false;
-  // ProgArchives non filtra per voto massimo: lo fa l'app qui
-  const votoMax = Number($('pa-voto-max').value) || 0;
-  const tolti = votoMax ? album.filter((x) => x.voto > votoMax).length : 0;
-  if (tolti && tolti === album.length) {
-    stato.textContent = `Tutti gli album hanno un voto sopra ${fmtVoto(votoMax)}. Scegli 250 album su ProgArchives, oppure togli il voto massimo.`;
-    return;
-  }
-  if (tolti) album = album.filter((x) => !(x.voto > votoMax));
   if (!album.length) {
     stato.textContent = leggiChiaveClaude()
       ? 'Non ho trovato album in questo testo. Hai copiato la pagina della classifica?'
       : 'Non riesco a leggere la classifica da solo. Aggiungi la chiave di Claude in ⚙️ Impostazioni e riprova.';
     return;
   }
-  const lista = {
-    id: Date.now().toString(36),
-    nome: $('nome-lista').value.trim() || 'Classifica del ' + new Date().toLocaleDateString('it-IT'),
-    creata: new Date().toISOString(),
-    album,
-  };
-  if (!scriviListe([...leggiListe(), lista])) { stato.textContent = 'Memoria del telefono piena: elimina una classifica vecchia.'; return; }
-  idListaAttiva = lista.id;
-  scrivi('prog_lista_attiva', lista.id);
+  const errore = salvaClassifica(album, $('nome-lista').value.trim());
+  if (errore) { stato.textContent = errore; return; }
+  scrivi('prog_ultimi_appunti', firmaTesto(testo));
   history.back(); // torna alla home, che mostra la nuova classifica
   mostraHome();
 });
@@ -701,9 +721,90 @@ $('file-importa').addEventListener('change', async (e) => {
   location.reload();
 });
 
+// ---------- Il pulsante «Manda al Prog» (un segnalibro speciale) ----------
+// Gira sulla pagina di ProgArchives che Mauro ha aperto lui: prende il testo della classifica
+// (come "Seleziona tutto → Copia") più i link degli album, e lo porta all'app nell'indirizzo.
+// Va scritto senza commenti dentro e con i punti e virgola: nel segnalibro diventa una riga sola.
+// \x23 è il carattere "#" (scritto così perché dentro un segnalibro "#" darebbe problemi).
+function mandaAlProg(app) {
+  if (!/progarchives\.com$/.test(location.hostname)) { alert('Usa Manda al Prog sulla pagina con la classifica di ProgArchives.'); return; }
+  var link = [].map.call(document.querySelectorAll('a[href*="album.asp?id="]'), function (a) { return '[' + a.textContent.trim() + '](' + a.href + ')'; }).join('\n');
+  location.href = app + '\x23classifica=' + encodeURIComponent(document.body.innerText + '\n' + link);
+}
+function codiceSegnalibro() {
+  const app = new URL('./', location.href).href;
+  return 'javascript:(' + mandaAlProg.toString().replace(/\s*\n\s*/g, ' ') + ')(' + JSON.stringify(app) + ')';
+}
+$('codice-segnalibro').value = codiceSegnalibro();
+$('btn-copia-segnalibro').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(codiceSegnalibro());
+    $('info-segnalibro').textContent = '✅ Codice copiato. Ora segui i passi qui sopra.';
+  } catch {
+    $('codice-segnalibro').select();
+    $('info-segnalibro').textContent = 'Il telefono non lascia copiare da solo: tieni il dito sul codice qui sopra, scegli Seleziona tutto e poi Copia.';
+  }
+});
+
+// La classifica arriva dal segnalibro: è nell'indirizzo, dopo "#classifica="
+async function riceviDalSegnalibro() {
+  if (!location.hash.startsWith('#classifica=')) return;
+  let testo = '';
+  try { testo = decodeURIComponent(location.hash.slice('#classifica='.length)); } catch {}
+  history.replaceState({ v: 'home' }, '', location.pathname + location.search); // pulisce l'indirizzo
+  let album = leggiClassificaDaSolo(testo);
+  if (album.length < 3 && leggiChiaveClaude()) {
+    mostraAvviso('Claude sta leggendo la classifica… (può volerci fino a un minuto)');
+    try { album = await leggiClassificaConClaude(testo); } catch { album = []; }
+  }
+  if (album.length < 3) {
+    mostraAvviso('Non ho trovato una classifica in quella pagina. Usa «Manda al Prog» quando vedi i risultati su ProgArchives.');
+    return;
+  }
+  const errore = salvaClassifica(album, nomeDaFiltri());
+  mostraHome();
+  mostraAvviso(errore || `✅ Classifica aggiunta: ${listaAttiva().album.length} album.`);
+}
+
+// Se la classifica è stata aggiunta in un'altra scheda, aggiorna anche questa
+window.addEventListener('storage', (e) => {
+  if (e.key !== 'prog_liste' && e.key !== 'prog_lista_attiva') return;
+  idListaAttiva = leggi('prog_lista_attiva', idListaAttiva);
+  mostraHome();
+});
+
+// ---------- Classifica copiata a mano: l'app se ne accorge quando torni ----------
+// Controlla gli appunti solo se poco prima (30 minuti) hai toccato "Apri ProgArchives".
+$('link-progarchives').addEventListener('click', () => scrivi('prog_aperto_pa', Date.now()));
+let controlloInCorso = false;
+async function controllaAppunti() {
+  if (controlloInCorso || document.visibilityState !== 'visible' || $('home').classList.contains('hidden')) return;
+  const quando = leggi('prog_aperto_pa', 0);
+  if (!quando || Date.now() - quando > 30 * 60 * 1000 || !navigator.clipboard?.readText) return;
+  controlloInCorso = true;
+  try {
+    let testo = '';
+    try { testo = await navigator.clipboard.readText(); } catch { return; }
+    if (testo.length < 200 || leggi('prog_ultimi_appunti', '') === firmaTesto(testo)) return;
+    const album = leggiClassificaDaSolo(testo);
+    if (album.length < 3) return;
+    scrivi('prog_ultimi_appunti', firmaTesto(testo)); // non chiederlo di nuovo per lo stesso testo
+    const nome = nomeDaFiltri();
+    if (!confirm(`Hai copiato una classifica di ProgArchives con ${album.length} album.\nVuoi aggiungerla come "${nome}"?`)) return;
+    const errore = salvaClassifica(album, nome);
+    mostraHome();
+    mostraAvviso(errore || `✅ Classifica aggiunta: ${listaAttiva().album.length} album.`);
+  } finally {
+    controlloInCorso = false;
+  }
+}
+document.addEventListener('visibilitychange', controllaAppunti);
+window.addEventListener('focus', controllaAppunti);
+
 // ---------- Avvio ----------
 history.replaceState({ v: 'home' }, '');
 aggiornaQuota();
 mostraHome();
+riceviDalSegnalibro();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

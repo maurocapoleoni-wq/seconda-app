@@ -53,3 +53,10 @@ Mauro: principiante, scrive in italiano, vuole istruzioni passo passo. Usa l'app
   5. Dopo ogni modifica: dire quali file ricaricare e alzare `CACHE` in `sw.js`.
 - **Attenzione:** le app su `maurocapoleoni-wq.github.io` condividono il localStorage. Usare **nomi di chiavi diversi** da Cerca e Guarda (es. prefisso `prog_`).
 - Serve un QR code nuovo con l'indirizzo della seconda app.
+
+## Pulsante «Manda al Prog» (segnalibro) — 15 novembre 2026
+- L'app non può leggere la pagina di ProgArchives da sola (Cloudflare + i browser non lasciano leggere pagine di altri siti).
+- Soluzione: un segnalibro speciale (`javascript:`) che Mauro tocca sulla pagina della classifica. Prende il testo della pagina più i link degli album e apre l'app con `#classifica=…`; l'app la legge e la salva (`riceviDalSegnalibro` in app.js).
+- Il codice del segnalibro lo prepara l'app (pulsante «Copia il codice» nella guida). Se cambia l'indirizzo dell'app o la funzione `mandaAlProg`, va rifatto il segnalibro.
+- Riserva: se Mauro copia la pagina a mano, al ritorno l'app se ne accorge da sola (solo nei 30 minuti dopo aver toccato «Apri ProgArchives») e chiede se aggiungerla.
+- Provato con una pagina finta: la vera pagina di ProgArchives non si può aprire dal browser di Claude (controllo anti-robot, che non va aggirato).

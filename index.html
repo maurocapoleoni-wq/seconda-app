@@ -18,6 +18,8 @@
       <button id="btn-settings" class="icon-btn" aria-label="Impostazioni">⚙️</button>
     </header>
 
+    <p id="avviso" class="avviso hidden" role="status"></p>
+
     <!-- Come si porta una classifica nell'app -->
     <section id="guida" class="card guida">
       <details id="guida-apri" open>
@@ -46,6 +48,22 @@
         <a id="link-progarchives" class="btn" href="https://www.progarchives.com/top-prog-albums.asp?salbumtypes=1" target="_blank" rel="noopener">1. Apri ProgArchives</a>
         <button id="btn-incolla" type="button" class="btn primary">2. Incolla la classifica</button>
       </div>
+
+      <!-- Il segnalibro-pulsante: porta la classifica nell'app senza copiare e incollare -->
+      <details class="segnalibro">
+        <summary>⚡ Più veloce: il pulsante «Manda al Prog»</summary>
+        <p class="hint">Con questo pulsante non copi e non incolli più: quando vedi la classifica su ProgArchives lo tocchi e la classifica arriva qui da sola. Si prepara <b>una volta sola</b> per telefono, in Chrome (su Brave è quasi uguale):</p>
+        <ol>
+          <li>Tocca <b>📋 Copia il codice</b> qui sotto.</li>
+          <li>Apri una pagina qualsiasi in Chrome (va bene anche ProgArchives), tocca <b>⋮</b> (i tre puntini in alto a destra) e poi la stella <b>☆</b>.</li>
+          <li>In basso compare «Aggiunto ai preferiti»: tocca <b>Modifica</b>.</li>
+          <li>Nel <b>Nome</b> scrivi <b>Manda al Prog</b>. Nell'<b>URL</b> cancella tutto, tieni il dito e scegli <b>Incolla</b>. Poi tocca la freccia ← in alto a sinistra per salvare.</li>
+        </ol>
+        <p class="hint"><b>Come si usa:</b> sulla pagina con la classifica di ProgArchives tocca la barra dell'indirizzo in alto, scrivi <b>Manda</b> e tocca <b>Manda al Prog</b> (quello con la stellina) tra i suggerimenti.</p>
+        <button id="btn-copia-segnalibro" type="button" class="btn">📋 Copia il codice</button>
+        <textarea id="codice-segnalibro" rows="3" readonly></textarea>
+        <p id="info-segnalibro" class="hint"></p>
+      </details>
       </details>
     </section>
 

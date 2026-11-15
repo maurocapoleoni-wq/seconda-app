@@ -55,6 +55,11 @@ body {
 .guida summary::after { content: " ▾"; color: var(--viola); }
 .guida details[open] summary::after { content: " ▴"; }
 .guida details[open] summary { margin-bottom: 12px; }
+.segnalibro { margin-top: 16px; padding-top: 12px; border-top: 1px solid #333; }
+.segnalibro summary { font-size: 0.95rem; color: var(--oro); }
+.segnalibro .btn { width: 100%; margin: 10px 0 8px; }
+.segnalibro textarea { font-family: monospace; font-size: 0.7rem; color: var(--muted); }
+.avviso { margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: #2a2340; border: 1px solid var(--viola); }
 .filtri-pa { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 12px; color: var(--muted); font-size: 0.9rem; }
 .filtri-pa label { display: flex; align-items: center; gap: 6px; }
 .filtri-pa input, .filtri-pa select { padding: 8px 10px; border-radius: 8px; border: 1px solid #333; background: var(--bg); color: var(--text); font-size: 1rem; }
