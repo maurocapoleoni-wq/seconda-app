@@ -77,13 +77,14 @@ function mostraHome() {
 }
 
 // ---------- Filtri ----------
-const filtri = leggi('prog_filtri', { da: '', a: '', voto: '0', quanti: '250', testo: '' });
+const filtri = leggi('prog_filtri', { da: '', a: '', voto: '0', votoMax: '0', quanti: '250', testo: '' });
 if (!['25', '50', '100', '250'].includes(filtri.quanti)) filtri.quanti = '250';
 $('f-da').value = filtri.da;
 $('f-a').value = filtri.a;
 $('f-voto').value = filtri.voto;
+$('f-voto-max').value = filtri.votoMax || '0';
 $('f-quanti').value = filtri.quanti;
-for (const [id, k] of [['f-da', 'da'], ['f-a', 'a'], ['f-voto', 'voto'], ['f-quanti', 'quanti'], ['f-testo', 'testo']]) {
+for (const [id, k] of [['f-da', 'da'], ['f-a', 'a'], ['f-voto', 'voto'], ['f-voto-max', 'votoMax'], ['f-quanti', 'quanti'], ['f-testo', 'testo']]) {
   $(id).addEventListener('input', () => {
     filtri[k] = $(id).value;
     if (k !== 'testo') scrivi('prog_filtri', { ...filtri, testo: '' });
@@ -99,10 +100,11 @@ function mostraAlbum() {
   const ul = $('album');
   ul.innerHTML = '';
   if (!lista) return;
-  const da = Number(filtri.da) || 0, a = Number(filtri.a) || 9999, voto = Number(filtri.voto) || 0;
+  const da = Number(filtri.da) || 0, a = Number(filtri.a) || 9999, voto = Number(filtri.voto) || 0, votoMax = Number(filtri.votoMax) || 0;
   const cerca = minuscolo(filtri.testo);
   const scelti = lista.album.filter((x) => (!x.anno || (x.anno >= da && x.anno <= a))
     && (!voto || (x.voto || 0) >= voto)
+    && (!votoMax || !x.voto || x.voto <= votoMax)
     && (!cerca || minuscolo(x.titolo + ' ' + x.artista).includes(cerca)));
   const mostrati = scelti.slice(0, Number(filtri.quanti) || 250);
   $('stato-lista').textContent = scelti.length === lista.album.length
@@ -184,13 +186,14 @@ const NAZIONI_PA = [['', 'Tutte'], ...[
   ['198', 'Uruguay'], ['199', 'Uzbekistan'], ['140', 'Varie'], ['200', 'Venezuela'], ['203', 'Jugoslavia'],
 ].sort((x, y) => x[1].localeCompare(y[1], 'it'))];
 
-const sceltaPA = leggi('prog_filtri_pa', { nazione: '77', da: '', a: '', quanti: '100', voto: '0' });
+const sceltaPA = leggi('prog_filtri_pa', { nazione: '77', da: '', a: '', quanti: '100', voto: '0', votoMax: '0' });
 for (const [num, nome] of NAZIONI_PA) $('pa-nazione').append(new Option(nome, num));
 $('pa-nazione').value = NAZIONI_PA.some(([n]) => n === sceltaPA.nazione) ? sceltaPA.nazione : '';
 $('pa-da').value = sceltaPA.da;
 $('pa-a').value = sceltaPA.a;
 $('pa-quanti').value = sceltaPA.quanti;
 $('pa-voto').value = sceltaPA.voto || '0';
+$('pa-voto-max').value = sceltaPA.votoMax || '0';
 
 function linkProgArchives() {
   const p = new URLSearchParams();
@@ -217,14 +220,16 @@ function nomeDaFiltri() {
   const nazione = $('pa-nazione').selectedOptions[0]?.text || '';
   const da = $('pa-da').value, a = $('pa-a').value;
   const anni = da && a ? `${da}–${a}` : da ? `dal ${da}` : a ? `fino al ${a}` : '';
-  return [nazione === 'Tutte' ? 'Tutte le nazioni' : nazione, anni].filter(Boolean).join(' ');
+  const max = Number($('pa-voto-max').value) ? `voto fino a ${fmtVoto($('pa-voto-max').value)}` : '';
+  return [nazione === 'Tutte' ? 'Tutte le nazioni' : nazione, anni, max].filter(Boolean).join(' ');
 }
 
 function aggiornaLinkPA() {
   $('link-progarchives').href = linkProgArchives();
-  scrivi('prog_filtri_pa', { nazione: $('pa-nazione').value, da: $('pa-da').value, a: $('pa-a').value, quanti: $('pa-quanti').value, voto: $('pa-voto').value });
+  scrivi('prog_filtri_pa', { nazione: $('pa-nazione').value, da: $('pa-da').value, a: $('pa-a').value, quanti: $('pa-quanti').value, voto: $('pa-voto').value, votoMax: $('pa-voto-max').value });
+  $('nota-voto-max').classList.toggle('hidden', $('pa-voto-max').value === '0');
 }
-['pa-nazione', 'pa-da', 'pa-a', 'pa-quanti', 'pa-voto'].forEach((id) => $(id).addEventListener('input', aggiornaLinkPA));
+['pa-nazione', 'pa-da', 'pa-a', 'pa-quanti', 'pa-voto', 'pa-voto-max'].forEach((id) => $(id).addEventListener('input', aggiornaLinkPA));
 aggiornaLinkPA();
 
 // ---------- Incolla la classifica ----------
@@ -320,6 +325,14 @@ $('btn-leggi').addEventListener('click', async () => {
     return;
   }
   btn.disabled = false;
+  // ProgArchives non filtra per voto massimo: lo fa l'app qui
+  const votoMax = Number($('pa-voto-max').value) || 0;
+  const tolti = votoMax ? album.filter((x) => x.voto > votoMax).length : 0;
+  if (tolti && tolti === album.length) {
+    stato.textContent = `Tutti gli album hanno un voto sopra ${fmtVoto(votoMax)}. Scegli 250 album su ProgArchives, oppure togli il voto massimo.`;
+    return;
+  }
+  if (tolti) album = album.filter((x) => !(x.voto > votoMax));
   if (!album.length) {
     stato.textContent = leggiChiaveClaude()
       ? 'Non ho trovato album in questo testo. Hai copiato la pagina della classifica?'
